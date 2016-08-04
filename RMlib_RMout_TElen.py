@@ -18,21 +18,21 @@ infile = open(RMout, "r")
 line = infile.readline()
 for line in infile:
     line = line.split()
-    if not (line == [] or line[0] == 'SW' or line[0] == 'score'):
-        chr = line[4]
-        start = int(line[5])
-        end = int(line[6])
-        name = line[9]
-        TEclass = line[10]
-        RepEnd = int(line[12])
+    if not (line == [] or line[0] == 'SW' or line[0] == 'score'):  # for UCSC RMout
+        chr = line[5]
+        start = int(line[6])
+        end = int(line[7])
+        name = line[10]
+        TEclass = line[11]
+        RepEnd = int(line[14])
         score = float(line[1])
-        strand = line[8]
-        RepStart = line[11]
-        RepLeft = int(line[13].translate({ord('('): None, ord(')'): None}))
-        if strand == 'C':
-            strand = "-"
-            RepStart = line[13]
-            RepLeft = int(line[11].translate({ord('('): None, ord(')'): None}))
+        strand = line[9]
+        RepStart = int(line[13])
+        RepLeft = int(line[15])
+        if strand == '-':
+            RepStart = int(line[15])
+            RepLeft = int(line[13])
+            # RepLeft = int(line[11].translate({ord('('): None, ord(')'): None}))  # if I have to go back
         length = end - start + 1
         RepLength = RepLeft + RepEnd
         if TEclass not in unwant:
