@@ -4,12 +4,11 @@ import sys
 from Bio import SeqIO
 from Bio.Alphabet import generic_dna
 import re
+import statistics
 
 RMout = sys.argv[1]
 RMlib = sys.argv[2]
-RBlib = sys.argv[3]
 RMdict = {}  # the dictionary to store seq.id and seq from repeatmasker library
-RBdict = {}  # the dictionary to stor seq.id and seq from Repbase library
 
 unwant = ("Low_complexity", "Simple_repeat")  # tuple with TEclass I don't care
 # unwant = ("Low_complexity", "Simple_repeat", "scRNA", "snRNA", "tRNA", "srpRNA", "Satellite", "Satellite/centr")  # tuple with TEclass I don't care
@@ -37,7 +36,11 @@ for line in infile:
         length = end - start + 1
         RepLength = RepLeft + RepEnd
         if TEclass not in unwant:
-            TEdict[name] = {}
+            if name in TEdict:
+                TEdict[name]['length'].append(RepLength)  # append value to the existing list in the dict of dict
+            else:
+                TEdict[name] = {'length': [RepLength]}  # create the dict of dict
+
 
 
 
@@ -66,14 +69,15 @@ import_seq(RMlib, RMdict, "embl")
 
 for te in TEdict:
     if te in RMdict:
-        TEdict[te]['length'] = len(RMdict[te])
+        TEdict[te]['consensuslen'] = len(RMdict[te])
     # elif te in RBdict:
     #     TEdict[te] = RBdict[te]
     else:
-        print("no!!! Could not find %s anywhere! Time to panic!" % te)
+        # print("no!!! Could not find %s anywhere! Time to panic!" % te)
+        TEdict[te]['consensuslen'] = statistics.median(TEdict[te]['length'])
 
 for te in TEdict:
-    print(">%s\n%s\n" % (te, TEdict[te]))
+    print("%s\t%d" % (te, TEdict[te]['consensuslen']))
 
 
 
