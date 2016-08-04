@@ -14,7 +14,7 @@ unwant = ("Low_complexity", "Simple_repeat")  # tuple with TEclass I don't care
 # unwant = ("Low_complexity", "Simple_repeat", "scRNA", "snRNA", "tRNA", "srpRNA", "Satellite", "Satellite/centr")  # tuple with TEclass I don't care
 
 TEdict = {}  # a dict for unique TE names
-infile = open(RMout, "r")
+infile = open(RMout, "r", encoding='utf-8', errors='ignore')
 line = infile.readline()
 for line in infile:
     line = line.split()
