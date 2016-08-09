@@ -77,6 +77,11 @@ for te in TEdict:
         TEdict[te]['consensuslen'] = len(RBdict[te])
         TEdict[te]['cpnum'] = len(TEdict[te]['length'])
         TEdict[te]['length'] = sum(TEdict[te]['length'])
+    elif re.match(r'[a-zA-Z0-9]+', te).group() in RBdict:
+        TEdict[te]['consensuslen'] = len(RBdict[te])
+        TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+        TEdict[te]['length'] = sum(TEdict[te]['length'])
+
     else:
         # print("no!!! Could not find %s anywhere! Time to panic!" % te)
         # TEdict[te]['consensuslen'] = statistics.median(TEdict[te]['length'])
