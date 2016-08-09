@@ -80,8 +80,8 @@ for te in TEdict:
         TEdict[te]['length'] = sum(TEdict[te]['length'])
     else:
         print("%s is not found, try regex now!" % te)
-        teregex = re.match(r'[a-zA-Z0-9]+', te).group()
-        if teregex is not None and teregex in RBdict:
+        teregex = re.match(r'[a-zA-Z0-9]+', te)
+        if teregex is not None and teregex.group() in RBdict:
             print("%s is found with regex!" % te)
             TEdict[te]['consensuslen'] = len(RBdict[re.match(r'[a-zA-Z0-9]+', te).group()])
             TEdict[te]['cpnum'] = len(TEdict[te]['length'])
