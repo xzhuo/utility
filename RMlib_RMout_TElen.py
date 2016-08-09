@@ -8,13 +8,16 @@ import statistics
 
 RMout = sys.argv[1]
 RMlib = sys.argv[2]
+RBlib = sys.argv[3]
 RMdict = {}  # the dictionary to store seq.id and seq from repeatmasker library
+RBdict = {}  # the dictionary to store seq.id and seq from repbase library
 
 unwant = ("Low_complexity", "Simple_repeat")  # tuple with TEclass I don't care
 # unwant = ("Low_complexity", "Simple_repeat", "scRNA", "snRNA", "tRNA", "srpRNA", "Satellite", "Satellite/centr")  # tuple with TEclass I don't care
 
 TEdict = {}  # a dict for unique TE names
-infile = open(RMout, "r", encoding='utf-8', errors='ignore')
+infile = open(RMout, "r")
+# infile = open(RMout, "r", encoding='utf-8', errors='ignore')
 line = infile.readline()
 for line in infile:
     line = line.split()
@@ -42,8 +45,6 @@ for line in infile:
                 TEdict[name] = {'length': [RepLength]}  # create the dict of dict
 
 
-
-
 # the constucted dict structure is
 # {repname1:{'length':[length1],'div':[divergence1],...}, repname2:{'length':[length2],'div':[divergence2],...},...}
 infile.close()
@@ -62,7 +63,7 @@ def import_seq(file, dict, format):  # to manipulate seq name. Otherwise better 
         dict[seq_name] = str(seq_seq)
 
 import_seq(RMlib, RMdict, "embl")
-# import_seq(RBlib, RBdict, "fasta")
+import_seq(RBlib, RBdict, "fasta")
 
 # Or:
 # RMdict = SeqIO.to_dict(SeqIO.parse(RMlib, "fasta", generic_dna))
@@ -70,17 +71,17 @@ import_seq(RMlib, RMdict, "embl")
 for te in TEdict:
     if te in RMdict:
         TEdict[te]['consensuslen'] = len(RMdict[te])
-    # elif te in RBdict:
-    #     TEdict[te] = RBdict[te]
+        TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+        TEdict[te]['length'] = sum(TEdict[te]['length'])
+    elif te in RBdict:
+        TEdict[te]['consensuslen'] = len(RBdict[te])
     else:
         # print("no!!! Could not find %s anywhere! Time to panic!" % te)
-        TEdict[te]['consensuslen'] = statistics.median(TEdict[te]['length'])
+        # TEdict[te]['consensuslen'] = statistics.median(TEdict[te]['length'])
+        TEdict[te]['consensuslen'] = 0
 
 for te in TEdict:
-    print("%s\t%d" % (te, TEdict[te]['consensuslen']))
-
-
-
+    print("%s\t%d\t%d\t%d" % (te, TEdict[te]['consensuslen'], TEdict[te]['cpnum'], TEdict[te]['length']))
 
 
 # # now all seqs are in 2 dict now:
