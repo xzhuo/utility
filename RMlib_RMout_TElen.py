@@ -78,7 +78,7 @@ for te in TEdict:
         TEdict[te]['cpnum'] = len(TEdict[te]['length'])
         TEdict[te]['length'] = sum(TEdict[te]['length'])
     elif re.match(r'[a-zA-Z0-9]+', te).group() in RBdict:
-        TEdict[te]['consensuslen'] = len(RBdict[te])
+        TEdict[te]['consensuslen'] = len(RBdict[re.match(r'[a-zA-Z0-9]+', te).group()])
         TEdict[te]['cpnum'] = len(TEdict[te]['length'])
         TEdict[te]['length'] = sum(TEdict[te]['length'])
 
