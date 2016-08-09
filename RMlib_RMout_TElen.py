@@ -75,10 +75,14 @@ for te in TEdict:
         TEdict[te]['length'] = sum(TEdict[te]['length'])
     elif te in RBdict:
         TEdict[te]['consensuslen'] = len(RBdict[te])
+        TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+        TEdict[te]['length'] = sum(TEdict[te]['length'])
     else:
         # print("no!!! Could not find %s anywhere! Time to panic!" % te)
         # TEdict[te]['consensuslen'] = statistics.median(TEdict[te]['length'])
         TEdict[te]['consensuslen'] = 0
+        TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+        TEdict[te]['length'] = sum(TEdict[te]['length'])
 
 for te in TEdict:
     print("%s\t%d\t%d\t%d" % (te, TEdict[te]['consensuslen'], TEdict[te]['cpnum'], TEdict[te]['length']))
