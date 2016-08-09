@@ -81,11 +81,13 @@ for te in TEdict:
     else:
         print("%s is not found, try regex now!" % te)
         teregex = re.match(r'\w+[-|_]', te)
-        if teregex is not None and teregex.group()[:-1] in RBdict:
-            print("%s is found with regex!" % te)
-            TEdict[te]['consensuslen'] = len(RBdict[re.match(r'[a-zA-Z0-9]+', te).group()])
-            TEdict[te]['cpnum'] = len(TEdict[te]['length'])
-            TEdict[te]['length'] = sum(TEdict[te]['length'])
+        if teregex is not None:
+            teregexstring = teregex.group()[:-1]
+            if teregexstring in RBdict:
+                print("%s is found with regex!" % teregexstring)
+                TEdict[te]['consensuslen'] = len(RBdict[teregexstring])
+                TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+                TEdict[te]['length'] = sum(TEdict[te]['length'])
 
         else:
             # print("no!!! Could not find %s anywhere! Time to panic!" % te)
