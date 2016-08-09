@@ -9,6 +9,7 @@ import statistics
 RMout = sys.argv[1]
 RMlib = sys.argv[2]
 RBlib = sys.argv[3]
+outfile = sys.argv[4]
 RMdict = {}  # the dictionary to store seq.id and seq from repeatmasker library
 RBdict = {}  # the dictionary to store seq.id and seq from repbase library
 
@@ -77,20 +78,22 @@ for te in TEdict:
         TEdict[te]['consensuslen'] = len(RBdict[te])
         TEdict[te]['cpnum'] = len(TEdict[te]['length'])
         TEdict[te]['length'] = sum(TEdict[te]['length'])
-    elif re.match(r'[a-zA-Z0-9]+', te).group() in RBdict:
-        TEdict[te]['consensuslen'] = len(RBdict[re.match(r'[a-zA-Z0-9]+', te).group()])
-        TEdict[te]['cpnum'] = len(TEdict[te]['length'])
-        TEdict[te]['length'] = sum(TEdict[te]['length'])
-
     else:
-        # print("no!!! Could not find %s anywhere! Time to panic!" % te)
-        # TEdict[te]['consensuslen'] = statistics.median(TEdict[te]['length'])
-        TEdict[te]['consensuslen'] = 0
-        TEdict[te]['cpnum'] = len(TEdict[te]['length'])
-        TEdict[te]['length'] = sum(TEdict[te]['length'])
+        print("%s is not found, try regex now!" % te)
+        if re.match(r'[a-zA-Z0-9]+', te).group() in RBdict:
+            TEdict[te]['consensuslen'] = len(RBdict[re.match(r'[a-zA-Z0-9]+', te).group()])
+            TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+            TEdict[te]['length'] = sum(TEdict[te]['length'])
+
+        else:
+            # print("no!!! Could not find %s anywhere! Time to panic!" % te)
+            # TEdict[te]['consensuslen'] = statistics.median(TEdict[te]['length'])
+            TEdict[te]['consensuslen'] = 0
+            TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+            TEdict[te]['length'] = sum(TEdict[te]['length'])
 
 for te in TEdict:
-    print("%s\t%d\t%d\t%d" % (te, TEdict[te]['consensuslen'], TEdict[te]['cpnum'], TEdict[te]['length']))
+    print("%s\t%d\t%d\t%d" % (te, TEdict[te]['consensuslen'], TEdict[te]['cpnum'], TEdict[te]['length']), file=outfile)
 
 
 # # now all seqs are in 2 dict now:
