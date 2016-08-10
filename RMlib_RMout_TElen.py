@@ -38,7 +38,7 @@ for line in infile:
             RepLeft = int(line[13])
             # RepLeft = int(line[11].translate({ord('('): None, ord(')'): None}))  # if I have to go back
         length = end - start + 1
-        RepLength = RepLeft + RepEnd
+        RepLength = RepEnd - RepLeft
         if TEclass not in unwant:
             if name in TEdict:
                 TEdict[name]['length'].append(RepLength)  # append value to the existing list in the dict of dict
@@ -80,12 +80,17 @@ for te in TEdict:
         TEdict[te]['length'] = sum(TEdict[te]['length'])
     else:
         print("%s is not found, try regex now!" % te)
-        teregex = re.match(r'\w+[-|_]', te)
+        teregex = re.match(r'\S+[-|_]', te)
         if teregex is not None:
             teregexstring = teregex.group()[:-1]
+            print("looking for %s in RBlib" % teregexstring)
             if teregexstring in RBdict:
                 print("%s is found with regex!" % teregexstring)
                 TEdict[te]['consensuslen'] = len(RBdict[teregexstring])
+                TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+                TEdict[te]['length'] = sum(TEdict[te]['length'])
+            else:
+                TEdict[te]['consensuslen'] = 0
                 TEdict[te]['cpnum'] = len(TEdict[te]['length'])
                 TEdict[te]['length'] = sum(TEdict[te]['length'])
 
@@ -95,9 +100,9 @@ for te in TEdict:
             TEdict[te]['consensuslen'] = 0
             TEdict[te]['cpnum'] = len(TEdict[te]['length'])
             TEdict[te]['length'] = sum(TEdict[te]['length'])
-
+f = open(outfile, 'w+')
 for te in TEdict:
-    print("%s\t%d\t%d\t%d" % (te, TEdict[te]['consensuslen'], TEdict[te]['cpnum'], TEdict[te]['length']), file=outfile)
+    print("%s\t%d\t%d\t%d" % (te, TEdict[te]['consensuslen'], TEdict[te]['cpnum'], TEdict[te]['length']), file=f)
 
 
 # # now all seqs are in 2 dict now:
