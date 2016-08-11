@@ -1,4 +1,4 @@
-# with 2 similar but maybe not identical fasta files, which sequences of them are different?
+# extract LINE_5end, LINE_orf2 and LINE_3end
 
 import sys
 from Bio import SeqIO
