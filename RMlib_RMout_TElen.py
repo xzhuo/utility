@@ -9,7 +9,7 @@ import statistics
 RMout = sys.argv[1]
 RMlib = sys.argv[2]
 RBlib = sys.argv[3]
-outfile = sys.argv[4]
+genome = sys.argv[4]
 RMdict = {}  # the dictionary to store seq.id and seq from repeatmasker library
 RBdict = {}  # the dictionary to store seq.id and seq from repbase library
 
@@ -72,37 +72,93 @@ import_seq(RBlib, RBdict, "fasta")
 for te in TEdict:
     if te in RMdict:
         TEdict[te]['consensuslen'] = len(RMdict[te])
+        TEdict[te]['consensus'] = RMdict[te]
         TEdict[te]['cpnum'] = len(TEdict[te]['length'])
         TEdict[te]['length'] = sum(TEdict[te]['length'])
     elif te in RBdict:
         TEdict[te]['consensuslen'] = len(RBdict[te])
+        TEdict[te]['consensus'] = RBdict[te]
         TEdict[te]['cpnum'] = len(TEdict[te]['length'])
         TEdict[te]['length'] = sum(TEdict[te]['length'])
     else:
         print("%s is not found, try regex now!" % te)
         teregex = re.match(r'\S+[-|_]', te)
+        teregex2 = te.replace("/Alpha", "a")
+        teregex3 = te.replace("/Beta", "b")
         if teregex is not None:
             teregexstring = teregex.group()[:-1]
-            print("looking for %s in RBlib" % teregexstring)
-            if teregexstring in RBdict:
+            print("looking for %s in RMlib and RBlib" % teregexstring)
+            if teregexstring in RMdict:
+                print("%s is found with regex!" % teregexstring)
+                TEdict[te]['consensuslen'] = len(RMdict[teregexstring])
+                TEdict[te]['consensus'] = RMdict[teregexstring]
+                TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+                TEdict[te]['length'] = sum(TEdict[te]['length'])
+            elif teregexstring in RBdict:
                 print("%s is found with regex!" % teregexstring)
                 TEdict[te]['consensuslen'] = len(RBdict[teregexstring])
+                TEdict[te]['consensus'] = RBdict[teregexstring]
                 TEdict[te]['cpnum'] = len(TEdict[te]['length'])
                 TEdict[te]['length'] = sum(TEdict[te]['length'])
             else:
+                print("%s is not found with regex!" % teregexstring)
                 TEdict[te]['consensuslen'] = 0
                 TEdict[te]['cpnum'] = len(TEdict[te]['length'])
                 TEdict[te]['length'] = sum(TEdict[te]['length'])
-
+        elif not teregex2 == te:
+            teregexstring = teregex2
+            if teregexstring in RMdict:
+                print("%s is found with regex!" % teregexstring)
+                TEdict[te]['consensuslen'] = len(RMdict[teregexstring])
+                TEdict[te]['consensus'] = RMdict[teregexstring]
+                TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+                TEdict[te]['length'] = sum(TEdict[te]['length'])
+            elif teregexstring in RBdict:
+                print("%s is found with regex!" % teregexstring)
+                TEdict[te]['consensuslen'] = len(RBdict[teregexstring])
+                TEdict[te]['consensus'] = RBdict[teregexstring]
+                TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+                TEdict[te]['length'] = sum(TEdict[te]['length'])
+            else:
+                print("%s is not found with regex!" % teregexstring)
+                TEdict[te]['consensuslen'] = 0
+                TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+                TEdict[te]['length'] = sum(TEdict[te]['length'])
+        elif not teregex3 == te:
+            teregexstring = teregex3
+            if teregexstring in RMdict:
+                print("%s is found with regex!" % teregexstring)
+                TEdict[te]['consensuslen'] = len(RMdict[teregexstring])
+                TEdict[te]['consensus'] = RMdict[teregexstring]
+                TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+                TEdict[te]['length'] = sum(TEdict[te]['length'])
+            elif teregexstring in RBdict:
+                print("%s is found with regex!" % teregexstring)
+                TEdict[te]['consensuslen'] = len(RBdict[teregexstring])
+                TEdict[te]['consensus'] = RBdict[teregexstring]
+                TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+                TEdict[te]['length'] = sum(TEdict[te]['length'])
+            else:
+                print("%s is not found with regex!" % teregexstring)
+                TEdict[te]['consensuslen'] = 0
+                TEdict[te]['cpnum'] = len(TEdict[te]['length'])
+                TEdict[te]['length'] = sum(TEdict[te]['length'])
         else:
             # print("no!!! Could not find %s anywhere! Time to panic!" % te)
             # TEdict[te]['consensuslen'] = statistics.median(TEdict[te]['length'])
             TEdict[te]['consensuslen'] = 0
             TEdict[te]['cpnum'] = len(TEdict[te]['length'])
             TEdict[te]['length'] = sum(TEdict[te]['length'])
-f = open(outfile, 'w+')
+f1 = open("%sTE.size.txt" % genome, 'w')
+f2 = open("%sTE.consensus.fa" % genome, 'w')
+f3 = open("%sTE.missing.txt" % genome, 'w')
+print("TE_name\tcopy_number\ttotal_length", file=f3)
 for te in TEdict:
-    print("%s\t%d\t%d\t%d" % (te, TEdict[te]['consensuslen'], TEdict[te]['cpnum'], TEdict[te]['length']), file=f)
+    if TEdict[te]['consensuslen'] > 0:
+        print("%s\t%d\t%d\t%d" % (te, TEdict[te]['consensuslen'], TEdict[te]['cpnum'], TEdict[te]['length']), file=f1)
+        print(">%s\n%s" % (te, TEdict[te]['consensus']), file=f2)
+    else:
+        print("%s\t%d\t%d" % (te, TEdict[te]['cpnum'], TEdict[te]['length']), file=f3)
 
 
 # # now all seqs are in 2 dict now:
