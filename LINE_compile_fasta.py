@@ -45,34 +45,38 @@ with tempfile.NamedTemporaryFile('w+') as tempembl:
                         start = linesplit[1]
                         end = linesplit[3]
 
+    def water_c(RMfile, aname, bname):
+        with tempfile.NamedTemporaryFile('w+') as tempout:
+            astr = "%s:%s" % (RMfile, aname)
+            bstr = "%s:%s" % (RMfile, bname)
+            # bstr = "asis::%s" % bseq
+            water_cline = WaterCommandline(r"/Users/Xiaoyu/EMBOSS/EMBOSS-6.6.0/emboss/water",
+                                           asequence=astr,
+                                           bsequence=bstr,
+                                           gapopen=16, gapextend=4, aformat="pair",
+                                           outfile=tempout.name)
+            # print(water_cline)
+            stdout, stderr = water_cline()
+
+            # Shitty biopython does not have handy stuff like locatableseq in bioperl.
+            # So I have to parse it to find the start and end.
+            astart, aend, bstart, bend = Align2_pos(tempout, aname, bname)
+
     def get_seq(seq_list, RMfile, RMdict):
         if len(seq_list) == 2:
             # call water
-            with tempfile.NamedTemporaryFile('w+') as tempout:
-                aname = seq_list[0]
-                bname = seq_list[1]
-                aseq = str(RMdict[aname].seq)
-                bseq = str(RMdict[bname].seq)
-                astr = "%s:%s" % (RMfile, aname)
-                bstr = "%s:%s" % (RMfile, bname)
-                # bstr = "asis::%s" % bseq
-                water_cline = WaterCommandline(r"/Users/Xiaoyu/EMBOSS/EMBOSS-6.6.0/emboss/water",
-                                               asequence=astr,
-                                               bsequence=bstr,
-                                               gapopen=16, gapextend=4, aformat="pair",
-                                               outfile=tempout.name)
-                # print(water_cline)
-                stdout, stderr = water_cline()
+            aname = seq_list[0]
+            bname = seq_list[1]
+            aseq = str(RMdict[aname].seq)
+            bseq = str(RMdict[bname].seq)
+            astart, aend, bstart, bend = water_c(RMfile, aname, bname)
 
-                # Shitty biopython does not have handy stuff like locatableseq in bioperl.
-                # So I have to parse it to find the start and end.
-                astart, aend, bstart, bend = Align2_pos(tempout, aname, bname)
-                if aend == RMdict[aname].length and bstart == 1 and bend <= 180 and aend - astart <= 180: 
-                    seq = aseq[:astart-1] + bseq
-                    return seq
-                else:
-                    print("no! terribly wrong!!")
-                    return "NA"
+            if aend == RMdict[aname].length and bstart == 1 and bend <= 180 and aend - astart <= 180: 
+                seq = aseq[:astart-1] + bseq
+                return seq
+            else:
+                print("no! terribly wrong!!")
+                return "NA"
 
 
 
