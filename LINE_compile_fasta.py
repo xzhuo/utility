@@ -36,57 +36,65 @@ with tempfile.NamedTemporaryFile('w+') as tempembl:
     emblname = tempembl.name
     RMdict = SeqIO.to_dict(SeqIO.parse(tempembl, "embl"))
 
-    def get_seq(seq_list, RMdict):  # the 2nd option: for single seqence, it is the RMdict, for 2 or more sequences list, it is the tempembl
-        if len(seq_list) == 1:
-            seqname = seq_list[0]
-            seq = str(RMdict[seqname].seq)
-            return seq
+    def Align2_pos(fh, aname, bname):
+        for line in fh:
+            if not line[:1] == "#":
+                linesplit = line.split()
+                if len(linesplit) == 4:
+                    if linesplit[0] == aname:
+                        start = linesplit[1]
+                        end = linesplit[3]
 
+    def get_seq(seq_list, RMfile, RMdict):
         if len(seq_list) == 2:
             # call water
             with tempfile.NamedTemporaryFile('w+') as tempout:
                 aname = seq_list[0]
                 bname = seq_list[1]
-                aseq = "%s:%s" % (RMdict, aname)
-                bseq = "%s:%s" % (RMdict, bname)
+                aseq = str(RMdict[aname].seq)
+                bseq = str(RMdict[bname].seq)
+                astr = "%s:%s" % (RMfile, aname)
+                bstr = "%s:%s" % (RMfile, bname)
                 # bstr = "asis::%s" % bseq
                 water_cline = WaterCommandline(r"/Users/Xiaoyu/EMBOSS/EMBOSS-6.6.0/emboss/water",
-                                               asequence=aseq,
-                                               bsequence=bseq,
+                                               asequence=astr,
+                                               bsequence=bstr,
                                                gapopen=16, gapextend=4, aformat="pair",
                                                outfile=tempout.name)
-                print(water_cline)
+                # print(water_cline)
                 stdout, stderr = water_cline()
 
-                # Shitty biopython does not have handy stuff like locatableseq in bioperl. So I have to parse it to find the start and end.
-                for eachline in tempout:
-                    if not eachline[:1] == "#":
-                        linesplit = eachline.split()
-                        if len(linesplit) == 4:
-                            if linesplit[0] = aname:
-                                
+                # Shitty biopython does not have handy stuff like locatableseq in bioperl.
+                # So I have to parse it to find the start and end.
+                astart, aend, bstart, bend = Align2_pos(tempout, aname, bname)
+                if aend == RMdict[aname].length and bstart == 1 and bend <= 180 and aend - astart <= 180: 
+                    seq = aseq[:astart-1] + bseq
+                    return seq
+                else:
+                    print("no! terribly wrong!!")
+                    return "NA"
+
 
 
 
     for name in LINEdict:
         if "other" in LINEdict[name] and len(LINEdict[name]) == 1:
             frag = LINEdict[name]['other']['te']
-            seq_list = [frag]
-            seq = get_seq(seq_list, RMdict)
-            print(">%s\n%s" % (name, seq))
+            seq = str(RMdict[frag].seq)
+            print(">%s\n%s" % (frag, seq))
 
         elif "5end" in LINEdict[name] and "orf2" in LINEdict[name] and "3end" in LINEdict[name]:
             frag1 = LINEdict[name]['5end']['te']
             frag2 = LINEdict[name]['orf2']['te']
             frag3 = LINEdict[name]['3end']['te']
             seq_list = [frag1, frag2, frag3]
-            seq = get_seq(seq_list, tempembl.name)
+            seq = get_seq(seq_list, tempembl.name, RMdict)
             print(">%s\n%s" % (name, seq))
         elif "other" in LINEdict[name] and "3end" in LINEdict[name] and name[:2] == "L2":
             frag1 = LINEdict[name]['other']['te']
             frag2 = LINEdict[name]['3end']['te']
             seq_list = [frag1, frag2]
-            seq = get_seq(seq_list, tempembl.name)
+            seq = get_seq(seq_list, tempembl.name, RMdict)
             print(">%s\n%s" % (name, seq))
         else:
             print("can't get sequence for %s" % name)
