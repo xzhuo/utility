@@ -107,7 +107,7 @@ with tempfile.NamedTemporaryFile('w+') as tempembl:
             #    cend == len(bseq) and dstart == 1 and dend <= 300 and cend - cstart <= 300):
                 # seq = aseq + bseq[bend:cstart] + cseq
                 # return seq
-            
+
             seq = aseq + bseq[bend:cstart] + cseq
             return seq
             # else:
@@ -131,6 +131,12 @@ with tempfile.NamedTemporaryFile('w+') as tempembl:
         elif "other" in LINEdict[name] and "3end" in LINEdict[name] and (name[:2] == "L2" or name[:2] == "L3"):
             frag1 = LINEdict[name]['other']['te']
             frag2 = LINEdict[name]['3end']['te']
+            seq_list = [frag1, frag2]
+            seq = get_seq(seq_list, tempembl.name, RMdict)
+            outfa.write(">%s\n%s\n" % (name, seq))
+        elif "other" in LINEdict[name] and "5end" in LINEdict[name] and name == "MusHAL1":
+            frag1 = LINEdict[name]['5end']['te']
+            frag2 = LINEdict[name]['other']['te']
             seq_list = [frag1, frag2]
             seq = get_seq(seq_list, tempembl.name, RMdict)
             outfa.write(">%s\n%s\n" % (name, seq))
