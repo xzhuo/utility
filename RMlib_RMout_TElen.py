@@ -63,8 +63,8 @@ def import_seq(file, dict, format):  # to manipulate seq name. Otherwise better 
         # above: group() convert match object to string
         dict[seq_name] = str(seq_seq)
 
-import_seq(RMlib, RMdict, "embl")
-import_seq(RBlib, RBdict, "fasta")
+import_seq(RMlib, RMdict, "fasta")
+import_seq(RBlib, RBdict, "embl")
 
 # Or:
 # RMdict = SeqIO.to_dict(SeqIO.parse(RMlib, "fasta", generic_dna))
