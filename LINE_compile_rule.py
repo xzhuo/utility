@@ -98,52 +98,53 @@ with open(outfile, "r") as RMout:
             length = end - start + 1
             RepLength = RepLeft + RepEnd
             if re.match(r'LINE', TEclass):  # only LINEs are included here
-                for frag in chrtree[chr].search(start, end, strict=True):  # envelope search here.
-                    # if frag.data[1] == ID: #  can't use ID for RM3.0
-                    if frag.data[1] == TEclass and frag.data[2] == strand:  # use strand and TEclass as condition for RM3.0:
-                        if name not in LINEs:
-                            LINEs[name] = {}
-                        if frag.data[0][-5:] == '_5end':
-                            if "5end" not in LINEs[name]:
-                                LINEs[name]["5end"] = {}
-                            if frag.data[0] not in LINEs[name]["5end"]:
-                                LINEs[name]["5end"][frag.data[0]] = {}
-                                LINEs[name]["5end"][frag.data[0]]['cp'] = 1
-                                LINEs[name]["5end"][frag.data[0]]['len'] = length
+                if chr in chrtree:
+                    for frag in chrtree[chr].search(start, end):  # envelope search here.
+                        # if frag.data[1] == ID: #  can't use ID for RM3.0
+                        if frag.data[1] == TEclass and frag.data[2] == strand:  # use strand and TEclass as condition for RM3.0:
+                            if name not in LINEs:
+                                LINEs[name] = {}
+                            if frag.data[0][-5:] == '_5end':
+                                if "5end" not in LINEs[name]:
+                                    LINEs[name]["5end"] = {}
+                                if frag.data[0] not in LINEs[name]["5end"]:
+                                    LINEs[name]["5end"][frag.data[0]] = {}
+                                    LINEs[name]["5end"][frag.data[0]]['cp'] = 1
+                                    LINEs[name]["5end"][frag.data[0]]['len'] = length
+                                else:
+                                    LINEs[name]["5end"][frag.data[0]]['cp'] += 1
+                                    LINEs[name]["5end"][frag.data[0]]['len'] += length
+                            elif frag.data[0][-5:] == '_orf2':
+                                if "orf2" not in LINEs[name]:
+                                    LINEs[name]["orf2"] = {}
+                                if frag.data[0] not in LINEs[name]["orf2"]:
+                                    LINEs[name]["orf2"][frag.data[0]] = {}
+                                    LINEs[name]["orf2"][frag.data[0]]['cp'] = 1
+                                    LINEs[name]["orf2"][frag.data[0]]['len'] = length
+                                else:
+                                    LINEs[name]["orf2"][frag.data[0]]['cp'] += 1
+                                    LINEs[name]["orf2"][frag.data[0]]['len'] += length
+                            elif frag.data[0][-5:] == '_3end':
+                                if "3end" not in LINEs[name]:
+                                    LINEs[name]["3end"] = {}
+                                if frag.data[0] not in LINEs[name]["3end"]:
+                                    LINEs[name]["3end"][frag.data[0]] = {}
+                                    LINEs[name]["3end"][frag.data[0]]['cp'] = 1
+                                    LINEs[name]["3end"][frag.data[0]]['len'] = length
+                                else:
+                                    LINEs[name]["3end"][frag.data[0]]['cp'] += 1
+                                    LINEs[name]["3end"][frag.data[0]]['len'] += length
                             else:
-                                LINEs[name]["5end"][frag.data[0]]['cp'] += 1
-                                LINEs[name]["5end"][frag.data[0]]['len'] += length
-                        elif frag.data[0][-5:] == '_orf2':
-                            if "orf2" not in LINEs[name]:
-                                LINEs[name]["orf2"] = {}
-                            if frag.data[0] not in LINEs[name]["orf2"]:
-                                LINEs[name]["orf2"][frag.data[0]] = {}
-                                LINEs[name]["orf2"][frag.data[0]]['cp'] = 1
-                                LINEs[name]["orf2"][frag.data[0]]['len'] = length
-                            else:
-                                LINEs[name]["orf2"][frag.data[0]]['cp'] += 1
-                                LINEs[name]["orf2"][frag.data[0]]['len'] += length
-                        elif frag.data[0][-5:] == '_3end':
-                            if "3end" not in LINEs[name]:
-                                LINEs[name]["3end"] = {}
-                            if frag.data[0] not in LINEs[name]["3end"]:
-                                LINEs[name]["3end"][frag.data[0]] = {}
-                                LINEs[name]["3end"][frag.data[0]]['cp'] = 1
-                                LINEs[name]["3end"][frag.data[0]]['len'] = length
-                            else:
-                                LINEs[name]["3end"][frag.data[0]]['cp'] += 1
-                                LINEs[name]["3end"][frag.data[0]]['len'] += length
-                        else:
-                            if "other" not in LINEs[name]:
-                                LINEs[name]["other"] = {}
-                            if frag.data[0] not in LINEs[name]["other"]:
-                                LINEs[name]["other"][frag.data[0]] = {}
-                                LINEs[name]["other"][frag.data[0]]['cp'] = 1
-                                LINEs[name]["other"][frag.data[0]]['len'] = length
-                            else:
-                                LINEs[name]["other"][frag.data[0]]['cp'] += 1
-                                LINEs[name]["other"][frag.data[0]]['len'] += length
-print("done with RM output!")
+                                if "other" not in LINEs[name]:
+                                    LINEs[name]["other"] = {}
+                                if frag.data[0] not in LINEs[name]["other"]:
+                                    LINEs[name]["other"][frag.data[0]] = {}
+                                    LINEs[name]["other"][frag.data[0]]['cp'] = 1
+                                    LINEs[name]["other"][frag.data[0]]['len'] = length
+                                else:
+                                    LINEs[name]["other"][frag.data[0]]['cp'] += 1
+                                    LINEs[name]["other"][frag.data[0]]['len'] += length
+    print("done with RM output!")
 
 #print(json.dumps(LINEs, sort_keys=True, indent=4))
 
