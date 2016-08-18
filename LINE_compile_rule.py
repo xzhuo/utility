@@ -20,34 +20,60 @@ with open(alignfile, "r") as RMalign:
             start = int(line[5])
             end = int(line[6])
             score = float(line[1])
-            ID = line[-1]
-            if line[8] == 'C':
-                strand = line[8]
-                nameclass = line[9]
-                names = nameclass.split('#')
-                name = names[0]
-                TEclass = names[1]
 
-                RepStart = line[12]
-                RepEnd = int(line[11])
-                RepLeft = int(line[10].translate({ord('('): None, ord(')'): None}))
-            else:
-                strand = '+'
-                nameclass = line[8]
-                names = nameclass.split('#')
-                name = names[0]
-                TEclass = names[1]
-                RepStart = line[9]
-                RepEnd = int(line[10])
+            # for Repeatmasker open 4.0+:
+            # ID = line[-1]
+            # if line[8] == 'C':
+            #     strand = line[8]
+            #     nameclass = line[9]
+            #     names = nameclass.split('#')
+            #     name = names[0]
+            #     TEclass = names[1]
+            #     RepStart = line[12]
+            #     RepEnd = int(line[11])
+            #     RepLeft = int(line[10].translate({ord('('): None, ord(')'): None}))
+            # else:
+            #     strand = '+'
+            #     nameclass = line[8]
+            #     names = nameclass.split('#')
+            #     name = names[0]
+            #     TEclass = names[1]
+            #     RepStart = line[9]
+            #     RepEnd = int(line[10])
+            #     RepLeft = int(line[11].translate({ord('('): None, ord(')'): None}))
+
+            # for Repeatmasker open 3.0:
+            strand = line[8]
+            name = line[9]
+            TEclass = line[10]
+            RepEnd = int(line[12])
+            if strand == '+':
+                RepStart = line[11]
+                RepLeft = int(line[13].translate({ord('('): None, ord(')'): None}))
+            if strand == 'C':
+                RepStart = line[13]
                 RepLeft = int(line[11].translate({ord('('): None, ord(')'): None}))
+
+
             length = end - start + 1
             RepLength = RepLeft + RepEnd
             if re.match(r'LINE', TEclass):  # only LINEs are included here
+
+                # for Repeatmakser 4.0+, we can use ID, but ID is not available for 3.0.
+                # for 4.0:
                 if chr in chrtree:
                     chrtree[chr][start:end] = (name, ID)
                 else:
                     chrtree[chr] = IntervalTree()
                     chrtree[chr][start:end] = (name, ID)
+
+                # for 3.0:
+                if chr in chrtree:
+                    chrtree[chr][start:end] = (name, TEclass, strand)
+                else:
+                    chrtree[chr] = IntervalTree()
+                    chrtree[chr][start:end] = (name, TEclass, strand)
+
 print("done with RMalignment!")
 
 LINEs = {}
@@ -72,8 +98,9 @@ with open(outfile, "r") as RMout:
             length = end - start + 1
             RepLength = RepLeft + RepEnd
             if re.match(r'LINE', TEclass):  # only LINEs are included here
-                for frag in chrtree[chr][start:end]:
-                    if frag.data[1] == ID:
+                for frag in chrtree[chr].search(start, end, strict=True):  # envelope search here.
+                    # if frag.data[1] == ID: #  can't use ID for RM3.0
+                    if frag.data[1] == TEclass and frag.data[2] == strand:  # use strand and TEclass as condition for RM3.0:
                         if name not in LINEs:
                             LINEs[name] = {}
                         if frag.data[0][-5:] == '_5end':
