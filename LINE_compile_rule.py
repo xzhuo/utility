@@ -61,11 +61,11 @@ with open(alignfile, "r") as RMalign:
 
                 # for Repeatmakser 4.0+, we can use ID, but ID is not available for 3.0.
                 # for 4.0:
-                if chr in chrtree:
-                    chrtree[chr][start:end] = (name, ID)
-                else:
-                    chrtree[chr] = IntervalTree()
-                    chrtree[chr][start:end] = (name, ID)
+                # if chr in chrtree:
+                #     chrtree[chr][start:end] = (name, ID)
+                # else:
+                #     chrtree[chr] = IntervalTree()
+                #     chrtree[chr][start:end] = (name, ID)
 
                 # for 3.0:
                 if chr in chrtree:
