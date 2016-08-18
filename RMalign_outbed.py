@@ -4,7 +4,7 @@ import sys
 import re
 
 alignfile = sys.argv[1]  # Repeatmasker.org align file
-TE = sys.argc[2]
+TE = sys.argv[2]
 
 outfile = open(alignfile+'.'+TE+'.out', 'w')
 # write to bed file:
@@ -14,7 +14,7 @@ with open(alignfile, "r") as RMalign:
             linelist = line.split()
             if len(line) < 14:
                 print("RMalin file split wrong?")
-            score = int(linelist[1])
+            score = int(round(float(linelist[1])))
             chrom = linelist[4]
             start = int(linelist[5])
             end = int(linelist[6])
@@ -27,7 +27,7 @@ with open(alignfile, "r") as RMalign:
                 names = linelist[8]
                 name, TEclass = names.split('#')
             if name == TE:
-                outfile.write("\s\t\d\t\d\t\s\t\d\t\s" % (chrom, start, end, name, score, strand))
+                outfile.write("%s\t%d\t%d\t%s\t%d\t%s\n" % (chrom, start, end, name, score, strand))
 
             # or write everything:
             # outfile.write(line)
