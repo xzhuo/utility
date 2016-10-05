@@ -69,7 +69,7 @@ with open(gtf, "r") as input:
             curr_end = end if end > curr_end else curr_end
 
         else:
-            if curr_transcript.length > 0:
+            if len(curr_transcript) > 0:
                 print_to_bed()
             curr_transcript = transcript
             curr_chrom = chrom
