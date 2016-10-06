@@ -9,14 +9,18 @@ import re
 def print_to_bed():
     genebody.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start, curr_end, curr_transcript, curr_strand))
     if curr_strand == '+':
-        utr5.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start, curr_start_codon-1, curr_transcript, curr_strand))
-        utr3.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_stop_codon+1, curr_end, curr_transcript, curr_strand))
+        if(curr_start_codon-1 > curr_start):
+            utr5.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start, curr_start_codon-1, curr_transcript, curr_strand))
+        if(curr_end > curr_stop_codon+1):
+            utr3.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_stop_codon+1, curr_end, curr_transcript, curr_strand))
         distal.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start-2000, curr_start-1, curr_transcript, curr_strand))
         proximal.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start-350, curr_start-1, curr_transcript, curr_strand))
         core.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start-35, curr_start+34, curr_transcript, curr_strand))
     else:
-        utr5.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start_codon+1, curr_end, curr_transcript, curr_strand))
-        utr3.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start, curr_stop_codon-1, curr_transcript, curr_strand))
+        if(curr_end > curr_start_codon+1):
+            utr5.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start_codon+1, curr_end, curr_transcript, curr_strand))
+        if(curr_stop_codon-1 > curr_start):
+            utr3.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_start, curr_stop_codon-1, curr_transcript, curr_strand))
         distal.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_end+1, curr_end+2000, curr_transcript, curr_strand))
         proximal.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_end+1, curr_end+350, curr_transcript, curr_strand))
         core.write("%s\t%d\t%d\t%s\t.\t%s\n" % (curr_chrom, curr_end-34, curr_end+35, curr_transcript, curr_strand))
@@ -58,16 +62,15 @@ with open(gtf, "r") as input:
         searchobj = re.search(r'gene_id \"(.+)\"; transcript_id \"(.+)\";', attributes)
         gene = searchobj.group(1)
         transcript = searchobj.group(2)
-        if features == 'start_codon':
-            curr_start_codon = start if strand == '+' else end
-        if features == 'stop_codon':
-            curr_stop_codon = end if strand == '+' else start
-        if features == 'exon':
-            exon_list.append((start, end))
-
         if curr_transcript == transcript:
             curr_start = start if start < curr_start else curr_start
             curr_end = end if end > curr_end else curr_end
+            if features == 'start_codon':
+                curr_start_codon = start if strand == '+' else end
+            if features == 'stop_codon':
+                curr_stop_codon = end if strand == '+' else start
+            if features == 'exon':
+                exon_list.append((start, end))
 
         else:
             if len(curr_transcript) > 0:
@@ -80,6 +83,12 @@ with open(gtf, "r") as input:
             exon_list = []
             curr_start_codon = 0
             curr_stop_codon = 0
+            if features == 'start_codon':
+                curr_start_codon = start if strand == '+' else end
+            if features == 'stop_codon':
+                curr_stop_codon = end if strand == '+' else start
+            if features == 'exon':
+                exon_list.append((start, end))
 
     print_to_bed()
     utr5.close()
