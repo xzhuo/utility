@@ -3,7 +3,6 @@ import argparse
 import warnings
 from collections import OrderedDict
 
-
 def main():
     args = _get_args()
     genomes = args.filter.split(",")  # The list to store all included genomes
@@ -153,3 +152,5 @@ def print_block(block, Out):
             Out.write("i\t%s.%s\t%s\t%d\t%s\t%d" % (key, block[key]['chrom'], block[key]['leftStatus'], block[key]['leftCount'], block[key]['rightStatus'], block[key]['rightCount']))
         for key in gapList:
             Out.write("e\t%s.%s\t%d\t%d\t%s\t%d\t%s" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['gapStatus']))
+
+main()
