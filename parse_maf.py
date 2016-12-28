@@ -1,7 +1,6 @@
 import sys
 import argparse
 import warnings
-import re
 from collections import OrderedDict
 
 
@@ -24,7 +23,7 @@ def main():
                         try:
                             (key, value) = item.split("=")
                             curr_block[key] = value
-                        except RuntimeWarning:
+                        except ValueError:
                             print("Found abnormal a line in %d!" % (num))
                 if linelist.pop(0) == 's':
                     (assembly, chrom) = linelist.pop(0).split(".")
