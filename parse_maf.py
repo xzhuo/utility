@@ -5,61 +5,64 @@ from collections import OrderedDict
 
 def main():
     args = _get_args()
-    genomes = args.filter.split(",")  # The list to store all included genomes
+    genomes = args.assemblies.split(",")  # The list to store all included genomes
     curr_block = OrderedDict()
     last_block = OrderedDict()
     with open(args.maf, 'r') as Fh:
         with open(args.out, 'w') as Out:
             for num, line in enumerate(Fh, 1):
                 if line.startswith('#'):
-                    Out.write(line)
+                    Out.write(line + "\n")
                     continue
                 linelist = line.split()
-                if linelist.pop(0) == 'a':  # new alignmentblock
+                if len(linelist) < 2:
+                    continue
+                lead = linelist.pop(0)
+                if lead == 'a':  # new alignmentblock
                     last_block = merge_blocks(last_block, curr_block, genomes, Out)
                     curr_block = OrderedDict()
                     for item in linelist:
                         try:
                             (key, value) = item.split("=")
-                            curr_block[key] = value
+                            curr_block[key] = float(value)
                         except ValueError:
                             print("Found abnormal a line in %d!" % (num))
-                if linelist.pop(0) == 's':
-                    (assembly, chrom) = linelist.pop(0).split(".")
+                if lead == 's':
+                    (assembly, chrom) = linelist.pop(0).split(".", maxsplit=1)
                     if assembly not in genomes:
                         continue
                     (start, length, strand, chrlenth, seq) = linelist
                     curr_block[assembly] = {}
                     curr_block[assembly]['chrom'] = chrom
-                    curr_block[assembly]['start'] = start
-                    curr_block[assembly]['length'] = length
+                    curr_block[assembly]['start'] = int(start)
+                    curr_block[assembly]['length'] = int(length)
                     curr_block[assembly]['strand'] = strand
-                    curr_block[assembly]['chrlenth'] = chrlenth
+                    curr_block[assembly]['chrlenth'] = int(chrlenth)
                     curr_block[assembly]['seq'] = seq
-                if linelist.pop(0) == 'i':
-                    (assembly, chrom) = linelist.pop(0).split(".")
+                if lead == 'i':
+                    (assembly, chrom) = linelist.pop(0).split(".", maxsplit=1)
                     if assembly not in genomes:
                         continue
                     (leftStatus, leftCount, rightStatus, rightCount) = linelist
                     curr_block[assembly]['chrom'] = chrom
                     curr_block[assembly]['leftStatus'] = leftStatus
-                    curr_block[assembly]['leftCount'] = leftCount
+                    curr_block[assembly]['leftCount'] = int(leftCount)
                     curr_block[assembly]['rightStatus'] = rightStatus
-                    curr_block[assembly]['rightCount'] = rightCount
-                if linelist.pop(0) == 'e':
-                    (assembly, chrom) = linelist.pop(0).split(".")
+                    curr_block[assembly]['rightCount'] = int(rightCount)
+                if lead == 'e':
+                    (assembly, chrom) = linelist.pop(0).split(".", maxsplit=1)
                     if assembly not in genomes:
                         continue
                     (start, length, strand, chrlenth, gapStatus) = linelist
                     curr_block[assembly] = {}
                     curr_block[assembly]['chrom'] = chrom
-                    curr_block[assembly]['start'] = start
-                    curr_block[assembly]['length'] = length
+                    curr_block[assembly]['start'] = int(start)
+                    curr_block[assembly]['length'] = int(length)
                     curr_block[assembly]['strand'] = strand
-                    curr_block[assembly]['chrlenth'] = chrlenth
+                    curr_block[assembly]['chrlenth'] = int(chrlenth)
                     curr_block[assembly]['gapStatus'] = gapStatus
-                if linelist.pop(0) == 'q':
-                    (assembly, chrom) = linelist.pop(0).split(".")
+                if lead == 'q':
+                    (assembly, chrom) = linelist.pop(0).split(".", maxsplit=1)
                     quality = linelist[0]
                     curr_block[assembly]['quality'] = quality
 
@@ -85,10 +88,10 @@ def _get_args():
         help='The onput maf file.',
     )
     parser.add_argument(
-        '--filter',
-        '-f',
+        '--assemblies',
+        '-a',
         action="store",
-        dest="filter",
+        dest="assemblies",
         help="the genomes included in the output, comma seperated. The reference genome must be the first in the list.",
     )
     parser.add_argument(
@@ -98,6 +101,21 @@ def _get_args():
         dest="ref",
         help='the reference genome used to anchor the alignment,',
     )
+    parser.add_argument(
+        '--directory',
+        '-d',
+        action="store",
+        dest="dir",
+        help='The directory with all the maf files,',
+    )
+    parser.add_argument(
+        '--format',
+        '-f',
+        action="store",
+        dest="format",
+        help='The output format, could be maf or bed.',
+    )
+    return parser.parse_args()
 
 
 def merge_blocks(last_block, curr_block, genomes, Out):
@@ -109,8 +127,12 @@ def merge_blocks(last_block, curr_block, genomes, Out):
 
     if complete:
         merge = 1  # if all species in curr_block are continue.
-        for assembly in genomes:
-            if curr_block[assembly]['leftStatus'] != 'C' or curr_block[assembly]['leftCount'] != 0:
+        for assembly in genomes[1:]:  # skip the first reference assembly here.
+            if 'leftStatus' in curr_block[assembly]:
+                if curr_block[assembly]['leftStatus'] != 'C' or curr_block[assembly]['leftCount'] != 0:
+                    merge = 0
+                    break
+            else:
                 merge = 0
                 break
         if merge:  # all species in curr_block are continue, merge curr_block into last_block and return it.
@@ -137,8 +159,10 @@ def print_block(block, Out):
     alnList = []
     gapList = []
     if bool(block):
-        Out.write("a\tscore= %.6f" % (block['score']))
+        Out.write("a\tscore= %.6f\n" % (block['score']))
         for key in block:
+            if key == 'score':
+                continue
             if 'seq' in block[key] and 'leftStatus' not in block[key]:
                 refList.append(key)
             if 'seq' in block[key] and 'leftStatus' in block[key]:
@@ -147,10 +171,11 @@ def print_block(block, Out):
                 gapList.append(key)
         if len(refList) > 1: print("missing i line?")
         for key in refList:
-            Out.write("s\t%s.%s\t%d\t%d\t%s\t%d\t%s" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['seq']))
+            Out.write("s\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['seq']))
         for key in alnList:
-            Out.write("i\t%s.%s\t%s\t%d\t%s\t%d" % (key, block[key]['chrom'], block[key]['leftStatus'], block[key]['leftCount'], block[key]['rightStatus'], block[key]['rightCount']))
+            Out.write("s\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['seq']))
+            Out.write("i\t%s.%s\t%s\t%d\t%s\t%d\n" % (key, block[key]['chrom'], block[key]['leftStatus'], block[key]['leftCount'], block[key]['rightStatus'], block[key]['rightCount']))
         for key in gapList:
-            Out.write("e\t%s.%s\t%d\t%d\t%s\t%d\t%s" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['gapStatus']))
-
+            Out.write("e\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['gapStatus']))
+        Out.write("\n")
 main()
