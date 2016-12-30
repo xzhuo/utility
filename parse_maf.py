@@ -137,12 +137,13 @@ def merge_blocks(last_block, curr_block, genomes, Out):
                 break
         if merge:  # all species in curr_block are continue, merge curr_block into last_block and return it.
             last_block['score'] += curr_block['score']
-            for key in ('length', 'seq', 'quality'):
-                if key in last_block[assembly]:
-                    last_block[assembly][key] += curr_block[assembly][key]
-            for key in ('rightStatus', "rightCount"):
-                if key in last_block[assembly]:
-                    last_block[assembly][key] = curr_block[assembly][key]
+            for assembly in genomes:
+                for key in ('length', 'seq', 'quality'):
+                    if key in last_block[assembly]:
+                        last_block[assembly][key] += curr_block[assembly][key]
+                for key in ('rightStatus', "rightCount"):
+                    if key in last_block[assembly]:
+                        last_block[assembly][key] = curr_block[assembly][key]
             return(last_block)
         else:  # not all speceis are continue in the curr_block, print last_block, and return curr_block as next last_block.
             print_block(last_block, Out)
