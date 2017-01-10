@@ -33,6 +33,7 @@ def main():
                         continue
                     (start, length, strand, chrlenth, seq) = linelist
                     curr_block[assembly] = {}
+                    curr_block[assembly]['aln'] = 1  # it is an alignment seq in the block
                     curr_block[assembly]['chrom'] = chrom
                     curr_block[assembly]['start'] = int(start)
                     curr_block[assembly]['length'] = int(length)
@@ -55,6 +56,7 @@ def main():
                         continue
                     (start, length, strand, chrlenth, gapStatus) = linelist
                     curr_block[assembly] = {}
+                    curr_block[assembly]['aln'] = 0  # it is not an alignment seq in the block
                     curr_block[assembly]['chrom'] = chrom
                     curr_block[assembly]['start'] = int(start)
                     curr_block[assembly]['length'] = int(length)
@@ -118,24 +120,41 @@ def _get_args():
     return parser.parse_args()
 
 
-def merge_blocks(last_block, curr_block, genomes, Out):
+def _is_complete(curr_block, genomes):
     complete = 1  # if curr_block contains all the species in genomes
     for assembly in genomes:
         if assembly not in curr_block:
             complete = 0
             break
+    return complete
 
-    if complete:
-        merge = 1  # if all species in curr_block are continue.
-        for assembly in genomes[1:]:  # skip the first reference assembly here.
-            if 'leftStatus' in curr_block[assembly]:
-                if curr_block[assembly]['leftStatus'] != 'C' or curr_block[assembly]['leftCount'] != 0:
-                    merge = 0
+
+def _is_continue(last_block, curr_block, genomes):
+    # leftStatus C or I <10
+    # or gap in the same species with C
+    # or gap in the same species with I?
+    continued = 1
+    if len(last_block) == 0:
+        continued = 0
+    else:
+        for assembly in genomes[1:]:
+            if curr_block[assembly]['aln'] == 1:
+                if curr_block[assembly]['leftStatus'] != 'C' or curr_block[assembly]['leftCount'] != 0:  # worry about small indels later
+                    continued = 0
+                    break
+            elif last_block[assembly]['aln'] == 0:
+                if curr_block[assembly]['gapStatus'] != 'C' or last_block[assembly]['gapStatus'] != 'C':  # now only merge 'C' gap status
+                    continued = 0
                     break
             else:
-                merge = 0
+                continued = 0
                 break
-        if merge:  # all species in curr_block are continue, merge curr_block into last_block and return it.
+    return continued
+
+
+def merge_blocks(last_block, curr_block, genomes, Out):
+    if _is_complete(curr_block, genomes):  #if the curr_block contains all the species in alignment
+        if _is_continue(last_block, curr_block, genomes):  # all species in curr_block are continue, merge curr_block into last_block and return it.
             last_block['score'] += curr_block['score']
             for assembly in genomes:
                 for key in ('length', 'seq', 'quality'):
