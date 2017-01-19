@@ -198,4 +198,6 @@ def print_block(block, Out):
         for key in gapList:
             Out.write("e\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['gapStatus']))
         Out.write("\n")
-main()
+
+if __name__ == '__main__':
+    main()
