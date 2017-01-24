@@ -152,14 +152,28 @@ def _is_continue(last_block, curr_block, genomes):
     return continued
 
 
-def compare_blocks(last_block, curr_block, genomes):
+def compare_blocks(last_block, curr_block, genomes, Out):
+    status = ()
+    anchor = genomes[0]
+    if (curr_block[anchor]['chrom'] == last_block[anchor]['chrom'] and
+        curr_block[anchor]['start'] == last_block[anchor]['start'] + last_block[anchor]['length'] and
+            curr_block[anchor]['strand'] == last_block[anchor]['strand']):
+                status[anchor] = 'c'  # continue
+                for assembly in genomes[1:]:
+                    if curr_block[assembly]['aln'] == 1 and last_block[assembly]['aln'] == 1:
+                        
+    else:
+        status[anchor] = 'b'  # break
+
+
+
 
 
 
 
 
 def merge_blocks(last_block, curr_block, genomes, Out):
-    if _is_complete(curr_block, genomes):  #if the curr_block contains all the species in alignment
+    if _is_complete(curr_block, genomes):  # if the curr_block contains all the species in alignment
         if _is_continue(last_block, curr_block, genomes):  # all species in curr_block are continue, merge curr_block into last_block and return it.
             last_block['score'] += curr_block['score']
             for assembly in genomes:
