@@ -152,6 +152,12 @@ def _is_continue(last_block, curr_block, genomes):
     return continued
 
 
+def compare_blocks(last_block, curr_block, genomes):
+
+
+
+
+
 def merge_blocks(last_block, curr_block, genomes, Out):
     if _is_complete(curr_block, genomes):  #if the curr_block contains all the species in alignment
         if _is_continue(last_block, curr_block, genomes):  # all species in curr_block are continue, merge curr_block into last_block and return it.
