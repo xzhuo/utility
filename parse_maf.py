@@ -161,6 +161,7 @@ def compare_blocks(last_block, curr_block, genomes, Out):
                 status[anchor] = 'c'  # continue
                 for assembly in genomes[1:]:
                     if curr_block[assembly]['aln'] == 1 and last_block[assembly]['aln'] == 1:
+                        if curr_block[assembly]['leftStatus'] == 'C' and last_block[assembly]['rightStatus'] == 'C':
                         
     else:
         status[anchor] = 'b'  # break
