@@ -1,6 +1,7 @@
 import sys
 import argparse
 import warnings
+import copy
 from collections import OrderedDict
 
 def main():
@@ -23,7 +24,7 @@ def main():
                         last_block = merge_blocks(last_block, curr_block, genomes, Out)
                     else:
                         print_block(last_block, Out)
-                        last_block = curr_block
+                        last_block = copy.deepcopy(curr_block)
                     curr_block = OrderedDict()
                     for item in linelist:
                         try:
