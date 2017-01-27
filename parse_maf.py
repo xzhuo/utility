@@ -19,7 +19,11 @@ def main():
                     continue
                 lead = linelist.pop(0)
                 if lead == 'a':  # new alignmentblock
-                    last_block = merge_blocks(last_block, curr_block, genomes, Out)
+                    if _can_merge(last_block, curr_block):
+                        last_block = merge_blocks(last_block, curr_block, genomes, Out)
+                    else:
+                        print_block(last_block, Out)
+                        last_block = curr_block
                     curr_block = OrderedDict()
                     for item in linelist:
                         try:
@@ -162,6 +166,12 @@ def compare_blocks(last_block, curr_block, genomes, Out):
                 for assembly in genomes[1:]:
                     if curr_block[assembly]['aln'] == 1 and last_block[assembly]['aln'] == 1:
                         if curr_block[assembly]['leftStatus'] == 'C' and last_block[assembly]['rightStatus'] == 'C':
+                            if curr_block[assembly]['leftCount'] > 0 or last_block[assembly]['rightCount'] > 0:
+                                print("error C not associated with 0 at chrom start!")
+                            else:
+                                status[assembly] = 'c'
+                        elif curr_block[assembly]['leftStatus'] == 'i' and last_block[assembly]['rightStatus'] == 'i':
+
                         
     else:
         status[anchor] = 'b'  # break
