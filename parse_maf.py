@@ -4,6 +4,7 @@ import warnings
 import copy
 from collections import OrderedDict
 
+
 def main():
     args = _get_args()
     genomes = args.assemblies.split(",")  # The list to store all included genomes
@@ -20,8 +21,11 @@ def main():
                     continue
                 lead = linelist.pop(0)
                 if lead == 'a':  # new alignmentblock
-                    if _can_merge(last_block, curr_block):
+                    Two_blocks = compare_blocks(last_block, curr_block, genomes, Out)
+                    if Two_blocks == "aln":
                         last_block = merge_blocks(last_block, curr_block, genomes, Out)
+                    elif Two_blocks == "gap":
+                        
                     else:
                         print_block(last_block, Out)
                         last_block = copy.deepcopy(curr_block)
@@ -134,54 +138,55 @@ def _is_complete(curr_block, genomes):
     return complete
 
 
-def _is_continue(last_block, curr_block, genomes):
-    # leftStatus C or I <10
-    # or gap in the same species with C
-    # or gap in the same species with I?
-    continued = 1
-    if len(last_block) == 0:
-        continued = 0
-    else:
-        for assembly in genomes[1:]:
-            if curr_block[assembly]['aln'] == 1:
-                if curr_block[assembly]['leftStatus'] != 'C' or curr_block[assembly]['leftCount'] != 0:  # worry about small indels later
-                    continued = 0
-                    break
-            elif last_block[assembly]['aln'] == 0:
-                if curr_block[assembly]['gapStatus'] != 'C' or last_block[assembly]['gapStatus'] != 'C':  # now only merge 'C' gap status
-                    continued = 0
-                    break
-            else:
-                continued = 0
-                break
-    return continued
-
-
 def compare_blocks(last_block, curr_block, genomes, Out):
-    status = ()
+    status = "aln"
     anchor = genomes[0]
-    if (curr_block[anchor]['chrom'] == last_block[anchor]['chrom'] and
-        curr_block[anchor]['start'] == last_block[anchor]['start'] + last_block[anchor]['length'] and
-            curr_block[anchor]['strand'] == last_block[anchor]['strand']):
-                status[anchor] = 'c'  # continue
-                for assembly in genomes[1:]:
-                    if curr_block[assembly]['aln'] == 1 and last_block[assembly]['aln'] == 1:
-                        if curr_block[assembly]['leftStatus'] == 'C' and last_block[assembly]['rightStatus'] == 'C':
-                            if curr_block[assembly]['leftCount'] > 0 or last_block[assembly]['rightCount'] > 0:
-                                print("error C not associated with 0 at chrom start!")
-                            else:
-                                status[assembly] = 'c'
-                        elif curr_block[assembly]['leftStatus'] == 'i' and last_block[assembly]['rightStatus'] == 'i':
+    if (curr_block[anchor]['chrom'] == last_block[anchor]['chrom']
+            and curr_block[anchor]['start'] == last_block[anchor]['start'] + last_block[anchor]['length']
+            and curr_block[anchor]['strand'] == last_block[anchor]['strand']):
+        status[anchor] = 'c'  # continue
+        for assembly in genomes[1:]:
+            if curr_block[assembly]['aln'] == 1 and last_block[assembly]['aln'] == 1:
+                if curr_block[assembly]['leftStatus'] == 'C' and last_block[assembly]['rightStatus'] == 'C':
+                    if curr_block[assembly]['leftCount'] > 0 or last_block[assembly]['rightCount'] > 0:
+                        print("Error! C not associated with 0 at $s, $d!" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
+                    else:
+                        status[assembly] = 'C'
+                elif curr_block[assembly]['leftStatus'] == 'I' and last_block[assembly]['rightStatus'] == 'I':
+                    if curr_block[assembly]['leftCount'] == last_block[assembly]['rightCount']:
+                        status[assembly] = 'I'
+                    else:
+                        print("error two Insertion with different counts!")
+                elif curr_block[assembly]['leftStatus'] == 'I' and last_block[assembly]['rightStatus'] == 'I':
+                    if curr_block[assembly]['leftCount'] == last_block[assembly]['rightCount']:
+                        status[assembly] = 'M'
+                    else:
+                        print("error two Insertion with different counts!")
+                else:
+                    status[assembly] = 'e'
+            elif curr_block[assembly]['aln'] == 0 and last_block[assembly]['aln'] == 0:
+                if (curr_block[assembly]['chrom'] == last_block[assembly]['chrom']
+                        and curr_block[assembly]['start'] == last_block[assembly]['start']
+                        and curr_block[assembly]['length'] == last_block[assembly]['length']
+                        and curr_block[assembly]['strand'] == last_block[assembly]['strand']
+                        and curr_block[assembly]['gapStatus'] == last_block[assembly]['gapStatus']):
+                    status[assembly] = curr_block[assembly]['gapStatus']
+                else:
+                    status[assembly] = 'b'
+                    print("I don't expect this $s, $d" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
+            else:
+                status[assembly] = 'b'  # b for break
 
-                        
     else:
         status[anchor] = 'b'  # break
+    for assembly in genomes:
+        if status[assembly] == 'b':
+            status = 'break'
+            break
+        elif curr_block[assembly]['aln'] == 0:
+            status = 'gap'
 
-
-
-
-
-
+    return status
 
 
 def merge_blocks(last_block, curr_block, genomes, Out):
