@@ -21,11 +21,11 @@ def main():
                     continue
                 lead = linelist.pop(0)
                 if lead == 'a':  # new alignmentblock
-                    Two_blocks = compare_blocks(last_block, curr_block, genomes, Out)
+                    Two_blocks, merged_block = compare_merge_blocks(last_block, curr_block, genomes, Out)
                     if Two_blocks == "aln":
-                        last_block = merge_blocks(last_block, curr_block, genomes, Out)
+                        last_block = copy.deepcopy(merged_block)
                     elif Two_blocks == "gap":
-                        
+                        last_block = copy.deepcopy(merged_block)
                     else:
                         print_block(last_block, Out)
                         last_block = copy.deepcopy(curr_block)
@@ -78,8 +78,16 @@ def main():
                     curr_block[assembly]['quality'] = quality
 
             else:
-                last_block = merge_blocks(last_block, curr_block, genomes, Out)
-                print_block(last_block, Out)
+                Two_blocks, merged_block = compare_merge_blocks(last_block, curr_block, genomes, Out)
+                if Two_blocks == "aln":
+                    last_block = copy.deepcopy(merged_block)
+                    print_block(last_block, Out)
+                elif Two_blocks == "gap":
+                    last_block = copy.deepcopy(merged_block)
+                    print_block(last_block, Out)
+                else:
+                    print_block(last_block, Out)
+                    print_block(curr_block, Out)
 
 
 def _get_args():
@@ -138,13 +146,16 @@ def _is_complete(curr_block, genomes):
     return complete
 
 
-def compare_blocks(last_block, curr_block, genomes, Out):
+def compare_merge_blocks(last_block, curr_block, genomes, Out):
     status = "aln"
+    merge_block = {}
     anchor = genomes[0]
     if (curr_block[anchor]['chrom'] == last_block[anchor]['chrom']
             and curr_block[anchor]['start'] == last_block[anchor]['start'] + last_block[anchor]['length']
             and curr_block[anchor]['strand'] == last_block[anchor]['strand']):
         status[anchor] = 'c'  # continue
+        merge_block[anchor] = merge_eachblocks(last_block[anchor], curr_block[anchor], 'anchor')
+
         for assembly in genomes[1:]:
             if curr_block[assembly]['aln'] == 1 and last_block[assembly]['aln'] == 1:
                 if curr_block[assembly]['leftStatus'] == 'C' and last_block[assembly]['rightStatus'] == 'C':
@@ -152,6 +163,7 @@ def compare_blocks(last_block, curr_block, genomes, Out):
                         print("Error! C not associated with 0 at $s, $d!" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
                     else:
                         status[assembly] = 'C'
+                        merge_block[assembly] = merge_eachblocks(last_block[assembly], curr_block[assembly], 'aln')
                 elif curr_block[assembly]['leftStatus'] == 'I' and last_block[assembly]['rightStatus'] == 'I':
                     if curr_block[assembly]['leftCount'] == last_block[assembly]['rightCount']:
                         status[assembly] = 'I'
@@ -171,6 +183,7 @@ def compare_blocks(last_block, curr_block, genomes, Out):
                         and curr_block[assembly]['strand'] == last_block[assembly]['strand']
                         and curr_block[assembly]['gapStatus'] == last_block[assembly]['gapStatus']):
                     status[assembly] = curr_block[assembly]['gapStatus']
+                    merge_block[assembly] = merge_eachblocks(last_block[assembly], curr_block[assembly], 'gap')
                 else:
                     status[assembly] = 'b'
                     print("I don't expect this $s, $d" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
@@ -186,29 +199,45 @@ def compare_blocks(last_block, curr_block, genomes, Out):
         elif curr_block[assembly]['aln'] == 0:
             status = 'gap'
 
-    return status
+    return status, merge_block
 
 
-def merge_blocks(last_block, curr_block, genomes, Out):
-    if _is_complete(curr_block, genomes):  # if the curr_block contains all the species in alignment
-        if _is_continue(last_block, curr_block, genomes):  # all species in curr_block are continue, merge curr_block into last_block and return it.
-            last_block['score'] += curr_block['score']
-            for assembly in genomes:
-                for key in ('length', 'seq', 'quality'):
-                    if key in last_block[assembly]:
-                        last_block[assembly][key] += curr_block[assembly][key]
-                for key in ('rightStatus', "rightCount"):
-                    if key in last_block[assembly]:
-                        last_block[assembly][key] = curr_block[assembly][key]
-            return(last_block)
-        else:  # not all speceis are continue in the curr_block, print last_block, and return curr_block as next last_block.
-            print_block(last_block, Out)
-            return(curr_block)
+def merge_eachblocks(last_assembly, curr_assembly, kind):
+    merged = {}
+    for key in ('chrom', 'start', 'strand', 'chrlenth', 'aln'):
+        merged[key] = last_assembly[key]
+    for key in ('length', 'seq', 'quality'):
+        merged[key] = last_assembly[key] + curr_assembly[key]
+    if kind == 'aln':
+        for key in ('leftStatus', 'leftCount'):
+            merged[key] = last_assembly[key]
+        for key in ('rightStatus', 'rightCount'):
+            merged[key] = curr_assembly[key]
+    if kind == 'gap':
+        merged['gapStatus'] = curr_assembly['gapStatus']
+    return merged
 
-    else:  # skip curr_block and print last_block because some species in missing in the curr_block.
-        print_block(last_block, Out)
-        curr_block.clear()
-        return (curr_block)
+
+# def __merge_blocks(last_block, curr_block, genomes, Out):
+#     if _is_complete(curr_block, genomes):  # if the curr_block contains all the species in alignment
+#         if _is_continue(last_block, curr_block, genomes):  # all species in curr_block are continue, merge curr_block into last_block and return it.
+#             last_block['score'] += curr_block['score']
+#             for assembly in genomes:
+#                 for key in ('length', 'seq', 'quality'):
+#                     if key in last_block[assembly]:
+#                         last_block[assembly][key] += curr_block[assembly][key]
+#                 for key in ('rightStatus', "rightCount"):
+#                     if key in last_block[assembly]:
+#                         last_block[assembly][key] = curr_block[assembly][key]
+#             return(last_block)
+#         else:  # not all speceis are continue in the curr_block, print last_block, and return curr_block as next last_block.
+#             print_block(last_block, Out)
+#             return(curr_block)
+
+#     else:  # skip curr_block and print last_block because some species in missing in the curr_block.
+#         print_block(last_block, Out)
+#         curr_block.clear()
+#         return (curr_block)
 
 
 def print_block(block, Out):
