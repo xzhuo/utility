@@ -3,6 +3,7 @@ import argparse
 import warnings
 import copy
 from collections import OrderedDict
+import pprint
 
 
 def main():
@@ -21,14 +22,21 @@ def main():
                     continue
                 lead = linelist.pop(0)
                 if lead == 'a':  # new alignmentblock
-                    Two_blocks, merged_block = compare_merge_blocks(last_block, curr_block, genomes, Out)
-                    if Two_blocks == "aln":
+                    if _is_complete(curr_block, genomes) and _is_complete(last_block, genomes):
+                        Two_blocks, merged_block = compare_merge_blocks(last_block, curr_block, genomes, Out)
+                    else:
+                        Two_blocks = 'break'
+                    if Two_blocks == 'new':
+                        last_block = copy.deepcopy(curr_block)
+                    elif Two_blocks == "aln":
                         last_block = copy.deepcopy(merged_block)
                     elif Two_blocks == "gap":
                         last_block = copy.deepcopy(merged_block)
                     else:
-                        print_block(last_block, Out)
-                        last_block = copy.deepcopy(curr_block)
+                        if _is_complete(last_block, genomes):
+                            print_block(last_block, Out)
+                        if _is_complete(curr_block, genomes):
+                            last_block = copy.deepcopy(curr_block)
                     curr_block = OrderedDict()
                     for item in linelist:
                         try:
@@ -147,7 +155,8 @@ def _is_complete(curr_block, genomes):
 
 
 def compare_merge_blocks(last_block, curr_block, genomes, Out):
-    status = "aln"
+    blockstatus = "aln"
+    status = {}
     merge_block = {}
     anchor = genomes[0]
     if (curr_block[anchor]['chrom'] == last_block[anchor]['chrom']
@@ -157,23 +166,35 @@ def compare_merge_blocks(last_block, curr_block, genomes, Out):
         merge_block[anchor] = merge_eachblocks(last_block[anchor], curr_block[anchor], 'anchor')
 
         for assembly in genomes[1:]:
+            if assembly not in curr_block or assembly not in last_block:
+                import ipdb; ipdb.set_trace()
+                print("hmmmm")
             if curr_block[assembly]['aln'] == 1 and last_block[assembly]['aln'] == 1:
                 if curr_block[assembly]['leftStatus'] == 'C' and last_block[assembly]['rightStatus'] == 'C':
                     if curr_block[assembly]['leftCount'] > 0 or last_block[assembly]['rightCount'] > 0:
-                        print("Error! C not associated with 0 at $s, $d!" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
-                    else:
+                        import ipdb; ipdb.set_trace()
+                        print("Error! C not associated with 0 at %s, %d!" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
+                    elif last_block[assembly]['start'] + last_block[assembly]['length'] == curr_block[assembly]['start']:
                         status[assembly] = 'C'
                         merge_block[assembly] = merge_eachblocks(last_block[assembly], curr_block[assembly], 'aln')
+                    else:
+                        import ipdb; ipdb.set_trace()
+                        print("something wrong with C aln lines")
                 elif curr_block[assembly]['leftStatus'] == 'I' and last_block[assembly]['rightStatus'] == 'I':
-                    if curr_block[assembly]['leftCount'] == last_block[assembly]['rightCount']:
+                    if (curr_block[assembly]['leftCount'] == last_block[assembly]['rightCount']
+                            and last_block[assembly]['start'] + last_block[assembly]['length'] + last_block[assembly]['rightCount'] == curr_block[assembly]['start']):
                         status[assembly] = 'I'
                     else:
-                        print("error two Insertion with different counts!")
-                elif curr_block[assembly]['leftStatus'] == 'I' and last_block[assembly]['rightStatus'] == 'I':
+                        # import ipdb; ipdb.set_trace()
+                        print("I warning! Possible SV in %s? %s, %d, %s, %d!" % (assembly, last_block[assembly]['chrom'], last_block[assembly]['start'], curr_block[assembly]['chrom'], curr_block[assembly]['start']))
+                        status[assembly] = 'b'
+                elif curr_block[assembly]['leftStatus'] == 'M' and last_block[assembly]['rightStatus'] == 'M':
                     if curr_block[assembly]['leftCount'] == last_block[assembly]['rightCount']:
                         status[assembly] = 'M'
                     else:
-                        print("error two Insertion with different counts!")
+                        # import ipdb; ipdb.set_trace()
+                        print("M warning! Possible SV in %s? %s, %d, %s, %d!" % (assembly, last_block[assembly]['chrom'], last_block[assembly]['start'], curr_block[assembly]['chrom'], curr_block[assembly]['start']))
+                        status[assembly] = 'b'
                 else:
                     status[assembly] = 'e'
             elif curr_block[assembly]['aln'] == 0 and last_block[assembly]['aln'] == 0:
@@ -186,35 +207,43 @@ def compare_merge_blocks(last_block, curr_block, genomes, Out):
                     merge_block[assembly] = merge_eachblocks(last_block[assembly], curr_block[assembly], 'gap')
                 else:
                     status[assembly] = 'b'
-                    print("I don't expect this $s, $d" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
+                    import ipdb; ipdb.set_trace()
+                    # pprint.PrettyPrinter(indent=4).pprint(curr_block)
+                    print("I don't expect this %s, %d" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
             else:
                 status[assembly] = 'b'  # b for break
-
+        merge_block['score'] = last_block['score'] + curr_block['score']
     else:
         status[anchor] = 'b'  # break
     for assembly in genomes:
         if status[assembly] == 'b':
-            status = 'break'
+            blockstatus = 'break'
             break
         elif curr_block[assembly]['aln'] == 0:
-            status = 'gap'
+            blockstatus = 'gap'
 
-    return status, merge_block
+    return blockstatus, merge_block
 
 
 def merge_eachblocks(last_assembly, curr_assembly, kind):
     merged = {}
     for key in ('chrom', 'start', 'strand', 'chrlenth', 'aln'):
         merged[key] = last_assembly[key]
-    for key in ('length', 'seq', 'quality'):
-        merged[key] = last_assembly[key] + curr_assembly[key]
-    if kind == 'aln':
-        for key in ('leftStatus', 'leftCount'):
-            merged[key] = last_assembly[key]
-        for key in ('rightStatus', 'rightCount'):
-            merged[key] = curr_assembly[key]
+
+    if kind == 'aln' or 'anchor':
+        for key in ('length', 'seq', 'quality'):
+            if key in last_assembly and key in curr_assembly:
+                merged[key] = last_assembly[key] + curr_assembly[key]
+        if kind == 'aln':
+            for key in ('leftStatus', 'leftCount'):
+                merged[key] = last_assembly[key]
+            for key in ('rightStatus', 'rightCount'):
+                merged[key] = curr_assembly[key]
     if kind == 'gap':
-        merged['gapStatus'] = curr_assembly['gapStatus']
+        for key in ('gapStatus', 'length', 'quality'):
+            if key in last_assembly and key in curr_assembly:
+                merged[key] = curr_assembly[key]
+
     return merged
 
 
@@ -246,6 +275,7 @@ def print_block(block, Out):
     gapList = []
     if bool(block):
         Out.write("a\tscore= %.6f\n" % (block['score']))
+        # Out.write("a\tscore= %.6f\n" % (6.66))
         for key in block:
             if key == 'score':
                 continue
