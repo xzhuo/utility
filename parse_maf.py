@@ -4,7 +4,7 @@ import warnings
 import copy
 from collections import OrderedDict
 import pprint
-
+import ipdb
 
 def main():
     args = _get_args()
@@ -23,7 +23,7 @@ def main():
                 lead = linelist.pop(0)
                 if lead == 'a':  # new alignmentblock
                     if _is_complete(curr_block, genomes) and _is_complete(last_block, genomes):
-                        Two_blocks, merged_block = compare_merge_blocks(last_block, curr_block, genomes, Out)
+                        Two_blocks, merged_block = compare_merge_blocks(last_block, curr_block, genomes, Out, args.gap)
                     else:
                         Two_blocks = 'break'
                     if Two_blocks == 'new':
@@ -86,7 +86,7 @@ def main():
                     curr_block[assembly]['quality'] = quality
 
             else:
-                Two_blocks, merged_block = compare_merge_blocks(last_block, curr_block, genomes, Out)
+                Two_blocks, merged_block = compare_merge_blocks(last_block, curr_block, genomes, Out, args.gap)
                 if Two_blocks == "aln":
                     last_block = copy.deepcopy(merged_block)
                     print_block(last_block, Out)
@@ -142,6 +142,14 @@ def _get_args():
         dest="format",
         help='The output format, could be maf or bed.',
     )
+    parser.add_argument(
+        '--gap',
+        '-g',
+        type=int,
+        action="store",
+        dest="gap",
+        help='the threshold to separate small and big indels. blocks separated by small indels are merged, separated by big indels are kept separated.',
+    )
     return parser.parse_args()
 
 
@@ -154,50 +162,59 @@ def _is_complete(curr_block, genomes):
     return complete
 
 
-def compare_merge_blocks(last_block, curr_block, genomes, Out):
+def compare_merge_blocks(last_block, curr_block, genomes, Out, indel_length):
     blockstatus = "aln"
     status = {}
-    merge_block = {}
+    merge_block = OrderedDict()
     anchor = genomes[0]
     if (curr_block[anchor]['chrom'] == last_block[anchor]['chrom']
             and curr_block[anchor]['start'] == last_block[anchor]['start'] + last_block[anchor]['length']
             and curr_block[anchor]['strand'] == last_block[anchor]['strand']):
-        status[anchor] = 'c'  # continue
+        status[anchor] = 'C'  # continue
         merge_block[anchor] = merge_eachblocks(last_block[anchor], curr_block[anchor], 'anchor')
 
         for assembly in genomes[1:]:
             if assembly not in curr_block or assembly not in last_block:
-                import ipdb; ipdb.set_trace()
+                ipdb.set_trace()
                 print("hmmmm")
-            if curr_block[assembly]['aln'] == 1 and last_block[assembly]['aln'] == 1:
+            if curr_block[assembly]['aln'] == 1 and last_block[assembly]['aln'] == 1:  # combine two aln blocks
                 if curr_block[assembly]['leftStatus'] == 'C' and last_block[assembly]['rightStatus'] == 'C':
                     if curr_block[assembly]['leftCount'] > 0 or last_block[assembly]['rightCount'] > 0:
-                        import ipdb; ipdb.set_trace()
+                        ipdb.set_trace()
                         print("Error! C not associated with 0 at %s, %d!" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
                     elif last_block[assembly]['start'] + last_block[assembly]['length'] == curr_block[assembly]['start']:
                         status[assembly] = 'C'
                         merge_block[assembly] = merge_eachblocks(last_block[assembly], curr_block[assembly], 'aln')
                     else:
-                        import ipdb; ipdb.set_trace()
+                        ipdb.set_trace()
                         print("something wrong with C aln lines")
                 elif curr_block[assembly]['leftStatus'] == 'I' and last_block[assembly]['rightStatus'] == 'I':
                     if (curr_block[assembly]['leftCount'] == last_block[assembly]['rightCount']
                             and last_block[assembly]['start'] + last_block[assembly]['length'] + last_block[assembly]['rightCount'] == curr_block[assembly]['start']):
-                        status[assembly] = 'I'
+                        if curr_block[assembly]['leftCount'] > indel_length:
+                            status[assembly] = 'I'
+                        else:
+                            status[assembly] = 'C'
+                            merge_block[assembly] = merge_eachblocks(last_block[assembly], curr_block[assembly], 'aln')
                     else:
                         # import ipdb; ipdb.set_trace()
                         print("I warning! Possible SV in %s? %s, %d, %s, %d!" % (assembly, last_block[assembly]['chrom'], last_block[assembly]['start'], curr_block[assembly]['chrom'], curr_block[assembly]['start']))
                         status[assembly] = 'b'
                 elif curr_block[assembly]['leftStatus'] == 'M' and last_block[assembly]['rightStatus'] == 'M':
-                    if curr_block[assembly]['leftCount'] == last_block[assembly]['rightCount']:
-                        status[assembly] = 'M'
+                    if (curr_block[assembly]['leftCount'] == last_block[assembly]['rightCount']
+                            and last_block[assembly]['start'] + last_block[assembly]['length'] + last_block[assembly]['rightCount'] == curr_block[assembly]['start']):
+                        if curr_block[assembly]['leftCount'] > indel_length:
+                            status[assembly] = 'M'
+                        else:
+                            status[assembly] = 'C'
+                            merge_block[assembly] = merge_eachblocks(last_block[assembly], curr_block[assembly], 'aln')
                     else:
                         # import ipdb; ipdb.set_trace()
                         print("M warning! Possible SV in %s? %s, %d, %s, %d!" % (assembly, last_block[assembly]['chrom'], last_block[assembly]['start'], curr_block[assembly]['chrom'], curr_block[assembly]['start']))
                         status[assembly] = 'b'
                 else:
                     status[assembly] = 'e'
-            elif curr_block[assembly]['aln'] == 0 and last_block[assembly]['aln'] == 0:
+            elif curr_block[assembly]['aln'] == 0 and last_block[assembly]['aln'] == 0:  # combine two gap blocks.
                 if (curr_block[assembly]['chrom'] == last_block[assembly]['chrom']
                         and curr_block[assembly]['start'] == last_block[assembly]['start']
                         and curr_block[assembly]['length'] == last_block[assembly]['length']
@@ -207,21 +224,37 @@ def compare_merge_blocks(last_block, curr_block, genomes, Out):
                     merge_block[assembly] = merge_eachblocks(last_block[assembly], curr_block[assembly], 'gap')
                 else:
                     status[assembly] = 'b'
-                    import ipdb; ipdb.set_trace()
+                    ipdb.set_trace()
                     # pprint.PrettyPrinter(indent=4).pprint(curr_block)
                     print("I don't expect this %s, %d" % (curr_block[anchor]['chrom'], curr_block[anchor]['start']))
+            elif curr_block[assembly]['aln'] == 0 and last_block[assembly]['aln'] == 1:  # combine small indel gap block with aln block.
+                if curr_block[assembly]['chrom'] == last_block[assembly]['chrom']:
+                    if last_block[assembly]['start'] + last_block[assembly]['length'] == curr_block[assembly]['start']:
+                        if curr_block[anchor]['length'] < indel_length or curr_block[assembly]['length'] < indel_length:
+                            status[assembly] = 'C'
+                            merge_eachblocks(last_block[assembly], curr_block[assembly], 'mix')
+                        else:
+                            status[assembly] = 'b'
+                    else:
+                        status[assembly] = 'b'
+                        print("length discrepency! %s, %s. %d and %d is not %d" % (assembly, last_block[assembly]['chrom'], last_block[assembly]['start'], last_block[assembly]['length'], curr_block[assembly]['start']))
+                else:
+                    status[assembly] = 'b'
+                    print("different chrom in %s, %s, %s!" % (assembly, last_block[assembly]['chrom'], curr_block[assembly]['chrom']))
             else:
                 status[assembly] = 'b'  # b for break
         merge_block['score'] = last_block['score'] + curr_block['score']
     else:
         status[anchor] = 'b'  # break
     for assembly in genomes:
-        if status[assembly] == 'b':
-            blockstatus = 'break'
-            break
-        elif curr_block[assembly]['aln'] == 0:
-            blockstatus = 'gap'
-
+        try:
+            if status[assembly] == 'b':
+                blockstatus = 'break'
+                break
+            elif curr_block[assembly]['aln'] == 0:
+                blockstatus = 'gap'
+        except KeyError:
+            ipdb.set_trace()
     return blockstatus, merge_block
 
 
@@ -229,16 +262,40 @@ def merge_eachblocks(last_assembly, curr_assembly, kind):
     merged = {}
     for key in ('chrom', 'start', 'strand', 'chrlenth', 'aln'):
         merged[key] = last_assembly[key]
+    if kind == 'anchor':
+        merged['length'] = last_assembly['length'] + curr_assembly['length']
+        merged['seq'] = last_assembly['seq'] + curr_assembly['seq']
+        if 'quality' in last_assembly and 'quality' in curr_assembly:
+            merged['quality'] = last_assembly['quality'] + curr_assembly['quality']
 
-    if kind == 'aln' or 'anchor':
-        for key in ('length', 'seq', 'quality'):
-            if key in last_assembly and key in curr_assembly:
-                merged[key] = last_assembly[key] + curr_assembly[key]
-        if kind == 'aln':
-            for key in ('leftStatus', 'leftCount'):
-                merged[key] = last_assembly[key]
-            for key in ('rightStatus', 'rightCount'):
-                merged[key] = curr_assembly[key]
+    if kind == 'aln':
+        merged['length'] = last_assembly['length'] + last_assembly['rightCount'] + curr_assembly['length']
+        merged['seq'] = last_assembly['seq'] + 'N' * last_assembly['rightCount'] + curr_assembly['seq']
+        if 'quality' in last_assembly and 'quality' in curr_assembly:
+            merged['quality'] = last_assembly['quality'] + '0' * last_assembly['rightCount'] + curr_assembly['quality']
+        for key in ('leftStatus', 'leftCount'):
+            merged[key] = last_assembly[key]
+        for key in ('rightStatus', 'rightCount'):
+            merged[key] = curr_assembly[key]
+
+    if kind == 'mix':
+        merged['length'] = last_assembly['length'] + last_assembly['rightCount'] + curr_assembly['length']
+        if curr_assembly['gapStatus'] == 'C':
+            merged['seq'] = last_assembly['seq'] + 'N' * last_assembly['rightCount'] + '-' * curr_assembly['length']
+        if curr_assembly['gapStatus'] == 'I' or curr_assembly['gapStatus'] == 'M':
+            merged['seq'] = last_assembly['seq'] + 'N' * last_assembly['rightCount'] + 'N' * curr_assembly['length']
+        if 'quality' in last_assembly and 'quality' in curr_assembly:
+            merged['quality'] = last_assembly['quality'] + '0' * last_assembly['rightCount'] + curr_assembly['quality']
+        for key in ('leftStatus', 'leftCount'):
+            merged[key] = last_assembly[key]
+            merged['rightCount'] = last_assembly['rightCount'] - curr_assembly['length']
+            if merged['rightCount'] > 0:
+                merged['rightStatus'] = 'I'
+            elif merged['rightCount'] == 0:
+                merged['rightStatus'] = 'C'
+            else:
+                ipdb.set_trace()
+                print('length error during merge blocks!')
     if kind == 'gap':
         for key in ('gapStatus', 'length', 'quality'):
             if key in last_assembly and key in curr_assembly:
@@ -274,7 +331,7 @@ def print_block(block, Out):
     alnList = []
     gapList = []
     if bool(block):
-        Out.write("a\tscore= %.6f\n" % (block['score']))
+        Out.write("a\tscore: %.6f\n" % (block['score']))
         # Out.write("a\tscore= %.6f\n" % (6.66))
         for key in block:
             if key == 'score':
@@ -287,12 +344,15 @@ def print_block(block, Out):
                 gapList.append(key)
         if len(refList) > 1: print("missing i line?")
         for key in refList:
-            Out.write("s\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['seq']))
+            Out.write("%s.%s\t%d\t%d\t%s\t=\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand']))
+            #Out.write("s\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['seq']))
         for key in alnList:
-            Out.write("s\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['seq']))
-            Out.write("i\t%s.%s\t%s\t%d\t%s\t%d\n" % (key, block[key]['chrom'], block[key]['leftStatus'], block[key]['leftCount'], block[key]['rightStatus'], block[key]['rightCount']))
+            Out.write("%s.%s\t%d\t%d\t%s\t=\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand']))
+            #Out.write("s\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['seq']))
+            #Out.write("i\t%s.%s\t%s\t%d\t%s\t%d\n" % (key, block[key]['chrom'], block[key]['leftStatus'], block[key]['leftCount'], block[key]['rightStatus'], block[key]['rightCount']))
         for key in gapList:
-            Out.write("e\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['gapStatus']))
+            Out.write("%s.%s\t%d\t%d\t%s\t-\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand']))
+            # Out.write("e\t%s.%s\t%d\t%d\t%s\t%d\t%s\n" % (key, block[key]['chrom'], block[key]['start'], block[key]['length'], block[key]['strand'], block[key]['chrlenth'], block[key]['gapStatus']))
         Out.write("\n")
 
 if __name__ == '__main__':
