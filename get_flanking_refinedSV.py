@@ -4,7 +4,7 @@ SIZE = 50  # the size differential cut off used to filter if there is a sv in fl
 
 
 def main():
-    '''python3 get_flanking_refinedSV.py --distance 200 --target_size /bar/genomes/hg38/hg38_full.size --query_size /bar/genomes/panTro5/panTro5.chrom.sizes --sv <refined SV file> > output'''
+    '''python3 get_flanking_refinedSV.py --bam hg38.panTro5.final.sort.bam --distance 200 --target_size /bar/genomes/hg38/hg38_full.size --query_size /bar/genomes/panTro5/panTro5.chrom.sizes --sv <refined SV file> > output'''
     # the input refinedSV file should be 0 based bed file
     args = refine_calledSV._get_args()
     distance = int(args.distance)
