@@ -15,11 +15,11 @@ def main():
             line = line.rstrip()
             linelist = line.split()
             target_chr = linelist[0]
-            target_start = linelist[1]
-            target_end = linelist[2]
+            target_start = int(linelist[1])
+            target_end = int(linelist[2])
             query_chr = linelist[7]
-            query_start = linelist[8]
-            query_end = linelist[9]
+            query_start = int(linelist[8])
+            query_end = int(linelist[9])
             target_size = target_size_dict.get(target_chr)
             query_size = query_size_dict.get(query_chr)
             target_start_flanking = target_start - distance if target_start > distance else 0
