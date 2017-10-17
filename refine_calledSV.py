@@ -33,14 +33,14 @@ def _get_args():
     )
     parser.add_argument(
         '--target_size',
-        '-c',
+        '-t',
         action="store",
         dest="target_size",
         help='The target chromosome size file used for get_flanking_refinedSV.py.',
     )
     parser.add_argument(
         '--query_size',
-        '-c',
+        '-q',
         action="store",
         dest="query_size",
         help='The query chromosome size file used for get_flanking_refinedSV.py.',
