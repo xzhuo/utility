@@ -24,6 +24,20 @@ def _get_args():
         dest="bam",
         help='The input bam file.',
     )
+    parser.add_argument(
+        '--distance',
+        '-d',
+        action="store",
+        dest="distance",
+        help='The distance extended to both flanking region used for get_flanking_refinedSV.py.',
+    )
+    parser.add_argument(
+        '--chromsize',
+        '-c',
+        action="store",
+        dest="chrom_size",
+        help='The chromesome size file used for get_flanking_refinedSV.py.',
+    )
     return parser.parse_args()
 
 
@@ -59,7 +73,7 @@ def main():
 
 def get_query(bam, target_name, target_start, target_end):
     '''
-    parse bam file using pysam, and get position alignment information.
+    Parse bam file using pysam, and get position alignment information.
     '''
     import pysam
     target_start -= 1
@@ -82,6 +96,7 @@ def get_query(bam, target_name, target_start, target_end):
 def splitline(line, type):
     '''
     Split the line to a list.
+
     if type == "INTERNAL", per_id and matching_bases are number.
     if type == "BETWEEN", per_id and matching_bases are further splitted using comma.
     '''
@@ -111,7 +126,8 @@ def splitline(line, type):
 
 def merge_line(last_line, line):
     '''
-    merge 2 lines to 1 line. the first line must be INS:BETWEEN, the 2nd line must be DEL:BETWEEN.
+    Merge 2 lines to 1 line. the first line must be INS:BETWEEN, the 2nd line must be DEL:BETWEEN.
+
     The 2 lines merged and replaced with 1 line as a new sv_type: REPLACE.
     For lines cannot merge, return last_line\nline
     '''
