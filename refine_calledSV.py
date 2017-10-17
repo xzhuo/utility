@@ -32,11 +32,18 @@ def _get_args():
         help='The distance extended to both flanking region used for get_flanking_refinedSV.py.',
     )
     parser.add_argument(
-        '--chromsize',
+        '--target_size',
         '-c',
         action="store",
-        dest="chrom_size",
-        help='The chromesome size file used for get_flanking_refinedSV.py.',
+        dest="target_size",
+        help='The target chromosome size file used for get_flanking_refinedSV.py.',
+    )
+    parser.add_argument(
+        '--query_size',
+        '-c',
+        action="store",
+        dest="query_size",
+        help='The query chromosome size file used for get_flanking_refinedSV.py.',
     )
     return parser.parse_args()
 
