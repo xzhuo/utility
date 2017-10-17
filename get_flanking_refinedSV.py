@@ -7,7 +7,7 @@ def main():
     '''python3 get_flanking_refinedSV.py --distance 200 --target_size /bar/genomes/hg38/hg38_full.size --query_size /bar/genomes/panTro5/panTro5.chrom.sizes --sv <refined SV file> > output'''
     # the input refinedSV file should be 0 based bed file
     args = refine_calledSV._get_args()
-    distance = args.distance
+    distance = int(args.distance)
     target_size_dict = get_chrom_size(args.target_size)
     query_size_dict = get_chrom_size(args.query_size)
     with open(args.sv, 'r') as Fh:
