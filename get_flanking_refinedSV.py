@@ -41,3 +41,6 @@ def get_chrom_size(chrom_size):
             chrom, size = line.split()
             size_dict.update({chrom: size})
     return size_dict
+
+if __name__ == '__main__':
+    main()
