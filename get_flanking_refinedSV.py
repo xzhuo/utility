@@ -20,8 +20,8 @@ def main():
             query_chr = linelist[7]
             query_start = int(linelist[8])
             query_end = int(linelist[9])
-            target_size = target_size_dict.get(target_chr)
-            query_size = query_size_dict.get(query_chr)
+            target_size = int(target_size_dict.get(target_chr))
+            query_size = int(query_size_dict.get(query_chr))
             target_start_flanking = target_start - distance if target_start > distance else 0
             target_end_flanking = target_end + distance if target_end + distance < target_size else target_size
             query_start_flanking = query_start - distance if query_start > distance else 0
