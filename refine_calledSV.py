@@ -85,17 +85,48 @@ def get_query(bam, target_name, target_start, target_end):
     import pysam
     target_start -= 1
     samfile = pysam.AlignmentFile(bam, "rb")
+    final_start = None
+    final_end = None
     for num, read in enumerate(samfile.fetch(target_name, target_start, target_end)):
-        if num == 0:
-            position_pairs = read.get_aligned_pairs()
-            start_list = [x[0] for x in position_pairs if x[1] == target_start]
-            end_list = [x[0] for x in position_pairs if x[1] == target_end]
-            if len(start_list) == 1 and len(end_list) == 1:
-                final_start = start_list[0] + read.get_tag("QS") + 1
-                final_end = end_list[0] + read.get_tag("QS")
+        position_pairs = read.get_aligned_pairs()
+        # position_dict = {x[1]: x[0] for x in position_pairs}
+        position_dict = dict()
+        for x in position_pairs:
+            if x[1] is not None:
+                if x[0] is not None:
+                    position_dict.update({x[1]: x[0]})
+                else:
+                    last_value = position_dict[x[1] - 1]  # last one!
+                    position_dict.update({x[1]: last_value})
+
+
+        # start_list = [x[0] for x in position_pairs if x[1] == target_start]
+        # end_list = [x[0] for x in position_pairs if x[1] == target_end]
+
+        # if len(start_list) == 1 and len(end_list) == 1:
+        #     final_start = start_list[0] + read.get_tag("QS") + 1
+        #     final_end = end_list[0] + read.get_tag("QS")
+        # else:
+        #     ipdb.set_trace()
+        all_target_positions = position_dict.keys()
+        target_min = min(all_target_positions)
+        target_max = max(all_target_positions)
+        if target_start >= target_min:
+            final_start = position_dict.get(target_start) + read.get_tag("QS") + 1
         else:
-            print("wrong line in %s" % str(read))
-            sys.exit("I don't expect multiple hits!")
+            bailout_start = position_dict.get(target_min) + read.get_tag("QS") + 1
+
+        if target_end <= target_max:
+            final_end = position_dict.get(target_end) + read.get_tag("QS")
+        else:
+            bailout_end = position_dict.get(target_max) + read.get_tag("QS")
+
+    final_start = bailout_start if final_start is None else final_start
+    final_end = bailout_end if final_end is None else final_end
+    # if final_start is None:
+    #     final_start = bailout_start
+    # if final_end is None:
+    #     final_end = bailout_end
 
     return final_start, final_end
 
