@@ -28,10 +28,13 @@ def main():
             query_end_flanking = query_end + distance if query_end + distance < query_size else query_size
             aln_start_flanking, aln_start = refine_calledSV.get_query(args.bam, target_chr, target_start_flanking, target_start - 1)
             aln_end, aln_end_flanking = refine_calledSV.get_query(args.bam, target_chr, target_end + 1, target_end_flanking)
-            if abs(aln_start_flanking - query_start_flanking) < SIZE and abs(aln_end_flanking - query_end_flanking) < SIZE:
-                print("%s\t%d\t%d\t%d\t%d" % (line, target_start_flanking, target_end_flanking, aln_start_flanking, aln_end_flanking))
+            if aln_start_flanking is not None and aln_end_flanking is not None:
+                if abs(aln_start_flanking - query_start_flanking) < SIZE and abs(aln_end_flanking - query_end_flanking) < SIZE:
+                    print("%s\t%d\t%d\t%d\t%d" % (line, target_start_flanking, target_end_flanking, aln_start_flanking, aln_end_flanking))
+                else:
+                    print("Maybe a SV in flanking region?\n%s\t%d\t%d\t%d\t%d" % (line, target_start_flanking, target_end_flanking, aln_start_flanking, aln_end_flanking))
             else:
-                print("Maybe a SV in flanking region?\n%s\t%d\t%d\t%d\t%d" % (line, target_start_flanking, target_end_flanking, aln_start_flanking, aln_end_flanking))
+                print("flanking region not found!\n%s" % line)
 
 
 def get_chrom_size(chrom_size):
@@ -42,6 +45,7 @@ def get_chrom_size(chrom_size):
             chrom, size = line.split()
             size_dict.update({chrom: size})
     return size_dict
+
 
 if __name__ == '__main__':
     main()

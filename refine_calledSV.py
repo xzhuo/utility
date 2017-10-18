@@ -121,12 +121,19 @@ def get_query(bam, target_name, target_start, target_end):
         else:
             bailout_end = position_dict.get(target_max) + read.get_tag("QS")
 
-    final_start = bailout_start if final_start is None else final_start
-    final_end = bailout_end if final_end is None else final_end
-    # if final_start is None:
-    #     final_start = bailout_start
-    # if final_end is None:
-    #     final_end = bailout_end
+    # final_start = bailout_start if final_start is None else final_start
+    # final_end = bailout_end if final_end is None else final_end
+    if final_start is None:
+        try:
+            final_start = bailout_start
+        except:
+            pass
+
+    if final_end is None:
+        try:
+            final_end = bailout_end
+        except:
+            pass
 
     return final_start, final_end
 
