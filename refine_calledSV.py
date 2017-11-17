@@ -153,7 +153,7 @@ def get_query(bam, target_name, target_start, target_end):
         except:
             pass
 
-    return final_start, final_end, target_start, target_end
+    return final_start, final_end, target_start + 1, target_end
 
 
 def splitline(line, type):
