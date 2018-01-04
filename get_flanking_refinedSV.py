@@ -26,8 +26,8 @@ def main():
             target_end_flanking = target_end + distance if target_end + distance < target_size else target_size
             query_start_flanking = query_start - distance if query_start > distance else 0
             query_end_flanking = query_end + distance if query_end + distance < query_size else query_size
-            aln_start_flanking, aln_start, target_start_flanking, target_start = refine_calledSV.get_query(args.bam, target_chr, target_start_flanking, target_start - 1)
-            aln_end, aln_end_flanking, target_end, target_end_flanking = refine_calledSV.get_query(args.bam, target_chr, target_end + 1, target_end_flanking)
+            aln_start_flanking, aln_start, target_start_flanking, target_start = refine_calledSV.get_query(args.bam, target_chr, target_start_flanking, target_start - 1, "end")  # the last parameter is stringent. Using "end" means only the read includes target_start - 1 is used to fetch.
+            aln_end, aln_end_flanking, target_end, target_end_flanking = refine_calledSV.get_query(args.bam, target_chr, target_end + 1, target_end_flanking, "start")  # the last parameter is stringent. Using "start" means only the read includes target_end + 1 is used to fetch.
             if aln_start_flanking is not None and aln_end_flanking is not None:
                 if abs(aln_start_flanking - query_start_flanking) < SIZE and abs(aln_end_flanking - query_end_flanking) < SIZE:
                     print("%s\t%d\t%d\t%d\t%d" % (line, target_start_flanking, target_end_flanking, aln_start_flanking, aln_end_flanking))

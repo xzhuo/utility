@@ -73,12 +73,12 @@ def main():
                     print(last_line)
                     last_line = None
                 target_name, target_start, target_end, sv_type, sv_length, per_id, matching_bases, query_name, query_start, query_end, sequence = splitline(line, "INTERNAL")
-                query_start, query_end, target_start, target_end = get_query(args.bam, target_name, target_start, target_end)  # if it is INTERNAL, get the precise insertion/deletion position in query.
+                query_start, query_end, target_start, target_end = get_query(args.bam, target_name, target_start, target_end, "no")  # if it is INTERNAL, get the precise insertion/deletion position in query.
                 line = "\t".join([target_name, str(target_start), str(target_end), sv_type, str(sv_length), str(per_id), str(matching_bases), query_name, str(query_start), str(query_end), sequence])
                 print(line)
 
 
-def get_query(bam, target_name, target_start, target_end):
+def get_query(bam, target_name, target_start, target_end, stringent):
     '''
     Parse bam file using pysam, and get position alignment information.
     '''
@@ -111,31 +111,32 @@ def get_query(bam, target_name, target_start, target_end):
         all_target_positions = position_dict.keys()
         target_min = min(all_target_positions)
         target_max = max(all_target_positions)
-        if read.is_reverse:
-            query_length = read.query_length
-            if target_start >= target_min:
-                final_start = read.query_length - position_dict.get(target_start) + read.get_tag("QS")
-            else:
-                bailout_start = read.query_length - position_dict.get(target_min) + read.get_tag("QS")
-                alt_target_start = target_min
+        if (stringent == "start" and target_start in position_dict) or (stringent == "end" and target_end in position_dict) or stringent == "no":
+            if read.is_reverse:
+                query_length = read.query_length
+                if target_start >= target_min:
+                    final_start = query_length - position_dict.get(target_start) + read.get_tag("QS")
+                else:
+                    bailout_start = query_length - position_dict.get(target_min) + read.get_tag("QS")
+                    alt_target_start = target_min
 
-            if target_end <= target_max:
-                final_end = read.query_length - position_dict.get(target_end) + read.get_tag("QS") + 1
+                if target_end <= target_max:
+                    final_end = query_length - position_dict.get(target_end) + read.get_tag("QS") + 1
+                else:
+                    bailout_end = query_length - position_dict.get(target_max) + read.get_tag("QS") + 1
+                    alt_target_end = target_max
             else:
-                bailout_end = read.query_length - position_dict.get(target_max) + read.get_tag("QS") + 1
-                alt_target_end = target_max
-        else:
-            if target_start >= target_min:
-                final_start = position_dict.get(target_start) + read.get_tag("QS") + 1
-            else:
-                bailout_start = position_dict.get(target_min) + read.get_tag("QS") + 1
-                alt_target_start = target_min
+                if target_start >= target_min:
+                    final_start = position_dict.get(target_start) + read.get_tag("QS") + 1
+                else:
+                    bailout_start = position_dict.get(target_min) + read.get_tag("QS") + 1
+                    alt_target_start = target_min
 
-            if target_end <= target_max:
-                final_end = position_dict.get(target_end) + read.get_tag("QS")
-            else:
-                bailout_end = position_dict.get(target_max) + read.get_tag("QS")
-                alt_target_end = target_max
+                if target_end <= target_max:
+                    final_end = position_dict.get(target_end) + read.get_tag("QS")
+                else:
+                    bailout_end = position_dict.get(target_max) + read.get_tag("QS")
+                    alt_target_end = target_max
 
     # final_start = bailout_start if final_start is None else final_start
     # final_end = bailout_end if final_end is None else final_end
