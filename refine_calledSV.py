@@ -202,18 +202,24 @@ def merge_line(last_line, line):
     # always! last_sv_length == last_query_end - last_query_start
     if target_name == last_target_name and target_start == last_target_start:
         # print("same target position!")
-        if query_name == last_query_name and query_start == last_query_start and query_end == last_query_end:
+        if query_name == last_query_name and ((query_start == last_query_start and query_end == last_query_end) or (query_end == last_query_start and query_start == last_query_end)):
             # print("same query position, merge!")
             sv_type = "REPLACE"
-            query_start = last_query_start
-            query_end = last_query_end
             sv_length = str(sv_length) + "," + str(last_sv_length)
             sequence = sequence + "," + last_sequence
             per_id = str(per_id[0]) + "," + str(per_id[1])
             matching_bases = str(matching_bases[0]) + "," + str(matching_bases[1])
-            line = "\t".join([target_name, str(target_start), str(target_end), sv_type, str(sv_length), str(per_id), str(matching_bases), query_name, str(query_start), str(query_end), sequence])
+            line = "\t".join([target_name, str(target_start), str(target_end), sv_type, str(sv_length), str(per_id), str(matching_bases), query_name, str(last_query_start), str(last_query_end), sequence])
+        elif per_id == last_per_id and matching_bases == last_matching_bases:
+            sv_type = "COMPLEX_REPLACE"
+            sv_length = str(sv_length) + "," + str(last_sv_length)
+            sequence = sequence + "," + last_sequence
+            per_id = str(per_id[0]) + "," + str(per_id[1])
+            matching_bases = str(matching_bases[0]) + "," + str(matching_bases[1])
+            line = "\t".join([target_name, str(target_start), str(target_end), sv_type, str(sv_length), str(per_id), str(matching_bases), query_name, str(last_query_start), str(last_query_end), sequence])
         else:
-            print("## I don't expect this!")
+            # ipdb.set_trace()
+            line = "## more complicated SV!"
     else:
         line = last_line + "\n" + line
     return line
