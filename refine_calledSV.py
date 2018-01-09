@@ -50,6 +50,7 @@ def _get_args():
 
 def main():
     args = _get_args()
+    bam_file = args.bam
     with open(args.sv, 'r') as Fh:
         last_line = None
         for line in Fh:
@@ -62,6 +63,7 @@ def main():
                     print(last_line)
                 last_line = line
             elif linelist[3] == "DEL:BETWEEN":
+                line = correct_reverse_del(bam_file, line)
                 if last_line:
                     line = merge_line(last_line, line)
                     print(line)
@@ -73,7 +75,7 @@ def main():
                     print(last_line)
                     last_line = None
                 target_name, target_start, target_end, sv_type, sv_length, per_id, matching_bases, query_name, query_start, query_end, sequence = splitline(line, "INTERNAL")
-                query_start, query_end, target_start, target_end = get_query(args.bam, target_name, target_start, target_end, "no")  # if it is INTERNAL, get the precise insertion/deletion position in query.
+                query_start, query_end, target_start, target_end = get_query(bam_file, target_name, target_start, target_end, "no")  # if it is INTERNAL, get the precise insertion/deletion position in query.
                 line = "\t".join([target_name, str(target_start), str(target_end), sv_type, str(sv_length), str(per_id), str(matching_bases), query_name, str(query_start), str(query_end), sequence])
                 print(line)
 
@@ -200,7 +202,7 @@ def merge_line(last_line, line):
     # always! last_sv_length == last_query_end - last_query_start
     if target_name == last_target_name and target_start == last_target_start:
         # print("same target position!")
-        if query_name == last_query_name and ((query_start == last_query_start and query_end == last_query_end) or query_end < query_start):
+        if query_name == last_query_name and query_start == last_query_start and query_end == last_query_end:
             # print("same query position, merge!")
             sv_type = "REPLACE"
             query_start = last_query_start
@@ -211,7 +213,7 @@ def merge_line(last_line, line):
             matching_bases = str(matching_bases[0]) + "," + str(matching_bases[1])
             line = "\t".join([target_name, str(target_start), str(target_end), sv_type, str(sv_length), str(per_id), str(matching_bases), query_name, str(query_start), str(query_end), sequence])
         else:
-            print("I don't expect this!")
+            print("## I don't expect this!")
     else:
         line = last_line + "\n" + line
     return line
@@ -223,6 +225,28 @@ def merge_line(last_line, line):
     # linelist[4] = linelist[4] + "," + last_linelist[4]
     # linelist[10] = linelist[10] + "," + last_linelist[10]
     return line
+
+
+def correct_reverse_del(bam, line):
+    '''
+    For some del:between lines, the query_end and query_start are wrong if it is alignment is reversed.
+    This function correct query_start and query_end if the bam alignment is reverse.
+    '''
+    import pysam
+    target_name, target_start, target_end, sv_type, sv_length, per_id, matching_bases, query_name, query_start, query_end, sequence = splitline(line, "BETWEEN")
+    samfile = pysam.AlignmentFile(bam, "rb")
+    for read in samfile.fetch(target_name, target_start - 1, target_end + 1):
+        if read.is_reverse:
+            if read.get_tag("QE") == query_start:
+                query_start = read.get_tag("QS")
+            if read.get_tag("QS") == query_end:
+                query_end = read.get_tag("QE")
+
+    per_id = str(per_id[0]) + "," + str(per_id[1])
+    matching_bases = str(matching_bases[0]) + "," + str(matching_bases[1])
+    line = "\t".join([target_name, str(target_start), str(target_end), sv_type, str(sv_length), str(per_id), str(matching_bases), query_name, str(query_start), str(query_end), sequence])
+    return line
+
 
 if __name__ == '__main__':
     main()
