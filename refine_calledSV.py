@@ -59,11 +59,12 @@ def main():
             line = line.rstrip()
             linelist = line.split()
             if linelist[3] == "INS:BETWEEN":
+                line = correct_reverse_between(bam_file, line)
                 if last_line:
                     print(last_line)
                 last_line = line
             elif linelist[3] == "DEL:BETWEEN":
-                line = correct_reverse_del(bam_file, line)
+                line = correct_reverse_between(bam_file, line)
                 if last_line:
                     line = merge_line(last_line, line)
                     print(line)
@@ -202,7 +203,7 @@ def merge_line(last_line, line):
     # always! last_sv_length == last_query_end - last_query_start
     if target_name == last_target_name and target_start == last_target_start:
         # print("same target position!")
-        if query_name == last_query_name and ((query_start == last_query_start and query_end == last_query_end) or (query_end == last_query_start and query_start == last_query_end)):
+        if query_name == last_query_name and (query_start == last_query_start and query_end == last_query_end):
             # print("same query position, merge!")
             sv_type = "REPLACE"
             sv_length = str(sv_length) + "," + str(last_sv_length)
@@ -233,9 +234,9 @@ def merge_line(last_line, line):
     return line
 
 
-def correct_reverse_del(bam, line):
+def correct_reverse_between(bam, line):
     '''
-    For some del:between lines, the query_end and query_start are wrong if it is alignment is reversed.
+    For del:between or ins:between lines, the query_end and query_start are reversed if it is alignment is reversed.
     This function correct query_start and query_end if the bam alignment is reverse.
     '''
     import pysam
@@ -243,9 +244,9 @@ def correct_reverse_del(bam, line):
     samfile = pysam.AlignmentFile(bam, "rb")
     for read in samfile.fetch(target_name, target_start - 1, target_end + 1):
         if read.is_reverse:
-            if read.get_tag("QE") == query_start:
+            if read.get_tag("TE") == target_start:
                 query_start = read.get_tag("QS")
-            if read.get_tag("QS") == query_end:
+            if read.get_tag("TS") == target_end:
                 query_end = read.get_tag("QE")
 
     per_id = str(per_id[0]) + "," + str(per_id[1])
