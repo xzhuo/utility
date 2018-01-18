@@ -217,7 +217,7 @@ def merge_line(last_line, line):
             sequence = sequence + "," + last_sequence
             per_id = str(per_id[0]) + "," + str(per_id[1])
             matching_bases = str(matching_bases[0]) + "," + str(matching_bases[1])
-            line = "\t".join([target_name, str(target_start), str(target_end), sv_type, str(sv_length), str(per_id), str(matching_bases), query_name, str(last_query_start), str(last_query_end), sequence])
+            line = "\t".join([target_name, str(target_start), str(target_end), sv_type, str(sv_length), str(per_id), str(matching_bases), query_name, str(query_start), str(query_end), sequence])
         else:
             # ipdb.set_trace()
             line = "## more complicated SV!"
