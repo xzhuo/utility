@@ -37,13 +37,13 @@ for line in infile:
             RepStart = int(line[15])
             RepLeft = int(line[13])
             # RepLeft = int(line[11].translate({ord('('): None, ord(')'): None}))  # if I have to go back
-        length = end - start + 1
+        length = end - start
         RepLength = RepEnd - RepLeft
         if TEclass not in unwant:
             if name in TEdict:
-                TEdict[name]['length'].append(RepLength)  # append value to the existing list in the dict of dict
+                TEdict[name]['length'].append(length)  # append value to the existing list in the dict of dict
             else:
-                TEdict[name] = {'length': [RepLength]}  # create the dict of dict
+                TEdict[name] = {'length': [length]}  # create the dict of dict
 
 
 # the constucted dict structure is
