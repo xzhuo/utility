@@ -57,8 +57,8 @@ def main():
                         last_region.frags.append(frag)
 
     for region in regions:
-        for frag in region.frags:
-            pass
+        line = "\t".join(region.from_chr, region.from_start, region.from_end, region.from_strand, region.from_summit, region.from_signal)
+        print(line)
 
 
 if __name__ == "__main__":
