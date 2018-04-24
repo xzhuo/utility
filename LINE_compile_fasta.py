@@ -6,7 +6,7 @@ from Bio import SeqIO
 from Bio.Emboss.Applications import WaterCommandline
 
 struc = sys.argv[1]  # LINE structure json file generated using LINE_compile_ruly.py
-# embl = sys.argv[2]  # embl format repeatmasker library
+embl = sys.argv[2]  # embl format repeatmasker library
 
 
 # water = "/Users/Xiaoyu/EMBOSS/EMBOSS-6.6.0/emboss/water"  # EMBOSS water
