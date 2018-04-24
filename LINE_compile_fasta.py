@@ -10,7 +10,7 @@ struc = sys.argv[1]  # LINE structure json file generated using LINE_compile_rul
 
 
 # water = "/Users/Xiaoyu/EMBOSS/EMBOSS-6.6.0/emboss/water"  # EMBOSS water
-embl = "/Users/Xiaoyu/Downloads/Libraries20090604/RepeatMaskerLib.utf8.embl"  # RM library embl file
+# embl = "/Users/Xiaoyu/Downloads/Libraries20090604/RepeatMaskerLib.utf8.embl"  # RM library embl file
 # embl = "/Users/Xiaoyu/Downloads/Libraries20140131/RepeatMaskerLib.embl"  # RM library embl file
 fh = open(struc)
 LINE_str = fh.read()

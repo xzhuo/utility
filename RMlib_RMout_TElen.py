@@ -63,11 +63,12 @@ def import_seq(file, dict, format):  # to manipulate seq name. Otherwise better 
         # above: group() convert match object to string
         dict[seq_name] = str(seq_seq)
 
-import_seq(RMlib, RMdict, "fasta")
-import_seq(RBlib, RBdict, "embl")
+# import_seq(RMlib, RMdict, "fasta")
+# import_seq(RBlib, RBdict, "embl")
 
 # Or:
-# RMdict = SeqIO.to_dict(SeqIO.parse(RMlib, "fasta", generic_dna))
+RMdict = SeqIO.to_dict(SeqIO.parse(RMlib, "fasta", generic_dna))
+RBdict = SeqIO.to_dict(SeqIO.parse(RBlib, "embl", generic_dna))
 
 for te in TEdict:
     if te in RMdict:
@@ -156,7 +157,7 @@ print("TE_name\tcopy_number\ttotal_length", file=f3)
 for te in TEdict:
     if TEdict[te]['consensuslen'] > 0:
         print("%s\t%d\t%d\t%d" % (te, TEdict[te]['consensuslen'], TEdict[te]['cpnum'], TEdict[te]['length']), file=f1)
-        print(">%s\n%s" % (te, TEdict[te]['consensus']), file=f2)
+        print(">%s\n%s" % (te, TEdict[te]['consensus'].seq), file=f2)
     else:
         print("%s\t%d\t%d" % (te, TEdict[te]['cpnum'], TEdict[te]['length']), file=f3)
 
