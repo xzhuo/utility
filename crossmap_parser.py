@@ -6,6 +6,7 @@ import argparse
 import ipdb
 import copy
 
+
 def _get_args():
     parser = argparse.ArgumentParser(description='simple arguments')
     parser.add_argument(
@@ -30,20 +31,27 @@ def main():
     args = _get_args()
     with open(args.input, 'r') as Fh:
         regions = []
-        last_region
+        last_region = Region.new()
         for line in Fh:
             line = line.rstrip()
             split = line.split()[6]
-            if split == '->' or split.startswith('split.1'):
-                regions.append(copy.deepcopy(last_region))
-                region.digest(line)
+            if split == '->' or split.startswith('split.1:'):
+                if length(last_region.frags) > 0:
+                    regions.append(copy.deepcopy(last_region))
+                last_region = Region.start(line)
+            else:
+                last_region.add_frag(line)
+
+    for region in regions:
+        for frag in region.frags:
 
 
-class region:
-    def __init__:
+
+class Region:
+    def new(self):
         self.frags = []
 
-    def digest(self, line):
+    def start(self, line):
         list = line.split()
         self.from_chr = list[0]
         self.from_start = list[1]
@@ -51,12 +59,16 @@ class region:
         self.from_summit = list[3]
         self.from_signal = list[4]
         self.from_strand = list[5]
-        frag = frag.digest_frag(list)
+        self.frags = []
+        self.add_frag(line)
+
+    def add_frag(self, line):
+        frag = Frag.digest_frag(line)
         self.frags.append(frag)
 
 
-class frag:
-    def digest_frag(self,line):
+class Frag:
+    def digest_frag(self, line):
         list = line.split()
         self.frag_to_chr = list[7]
         self.frag_to_start = list[8]
