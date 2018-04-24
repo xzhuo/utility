@@ -1,5 +1,5 @@
 '''
-A script to parse crossmap.py results for SV pr0ject
+A script to parse crossmap.py results for SV project
 '''
 import sys
 import argparse
@@ -27,6 +27,15 @@ def _get_args():
     return parser.parse_args()
 
 
+def can_merge(frag1, frag2, distance):
+    return (frag1.from_chr == frag2.from_chr and
+            frag1.from_strand == frag2.from_strand and
+            abs(max(frag1.from_start, frag2.from_start) - min(frag1.from_end, frag2.from_end) < distance) and
+            frag1.to_chr == frag2.to_chr and
+            frag1.to_strand == frag2.to_strand and
+            abs(max(frag1.to_start, frag2.to_start) - min(frag1.to_end, frag2.to_end)) < distance)
+
+
 def main():
     args = _get_args()
     with open(args.input, 'r') as Fh:
@@ -35,23 +44,32 @@ def main():
         for line in Fh:
             line = line.rstrip()
             split = line.split()[6]
-            if split == '->' or split.startswith('split.1:'):
-                if length(last_region.frags) > 0:
-                    regions.append(copy.deepcopy(last_region))
-                last_region = Region.start(line)
-            else:
-                last_region.add_frag(line)
+            if split != 'Fail':
+                if split == '->' or split.startswith('split.1:'):
+                    if len(last_region.frags) > 0:
+                        regions.append(copy.deepcopy(last_region))
+                    last_region = Region.init(line)
+                else:
+                    frag = Frag.digest_line(line)
+                    if can_merge(last_region.frags[-1], frag, args.distance):
+                        last_region.frags[-1].merge_frags(frag)
+                    else:
+                        last_region.frags.append(frag)
 
     for region in regions:
         for frag in region.frags:
+            pass
 
+
+if __name__ == "__main__":
+    main()
 
 
 class Region:
     def new(self):
         self.frags = []
 
-    def start(self, line):
+    def init(self, line):
         list = line.split()
         self.from_chr = list[0]
         self.from_start = list[1]
@@ -60,15 +78,12 @@ class Region:
         self.from_signal = list[4]
         self.from_strand = list[5]
         self.frags = []
-        self.add_frag(line)
-
-    def add_frag(self, line):
-        frag = Frag.digest_frag(line)
+        frag = Frag.digest_line(line)
         self.frags.append(frag)
 
 
 class Frag:
-    def digest_frag(self, line):
+    def digest_line(self, line):
         list = line.split()
         self.frag_to_chr = list[7]
         self.frag_to_start = list[8]
@@ -85,3 +100,9 @@ class Frag:
             self.frag_from_start = from_frag_list[2]
             self.frag_from_end = from_frag_list[3]
             self.frag_from_strand = from_frag_list[4]
+
+    def merge_frags(self, frag):
+        self.from_start = min(self.from_start, frag.from_start)
+        self.from_end = max(self.from_end, frag.from_end)
+        self.to_start = min(self.to_start, frag.to_start)
+        self.to_end = max(self.to_end, frag.to_end)
