@@ -103,6 +103,8 @@ def main():
                         last_region.frags.append(frag)
 
     for region in regions:
+        summit_frag = region.summit_frag_list()[0]
+
         for frag in region.frags:
             print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" %
                   (region.from_chr, region.from_start, region.from_end, region.from_strand, region.from_summit, region.from_signal,
