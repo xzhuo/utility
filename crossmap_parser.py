@@ -91,11 +91,13 @@ def can_merge(frag1, frag2, distance):
             abs(max(frag1.to_start, frag2.to_start) - min(frag1.to_end, frag2.to_end)) < distance)
 
 
-def in_order(frag1, frag2):
+def in_order(frag1, frag2, size_limit):
     return (frag1.from_chr == frag2.from_chr and
             frag1.from_strand == frag2.from_strand and
             frag1.to_chr == frag2.to_chr and
             frag1.to_strand == frag2.to_strand and
+            abs(frag1.to_start - frag2.to_start) < size_limit and
+            abs(frag1.to_end - frag2.to_end) < size_limit and
             (
                 (frag1.to_strand == "+" and (frag1.from_start - frag2.from_start) * (frag1.to_start - frag2.to_start) > 0) or
                 (frag1.to_strand == "-" and (frag1.from_start - frag2.from_start) * (frag1.to_start - frag2.to_start) < 0)
@@ -162,13 +164,7 @@ def main():
             core_to_strand = summit_frag.to_strand
             uni_region = Region()
             for frag in region.frags:
-                if (
-                    frag.to_chr == core_to_chr and
-                    frag.to_strand == core_to_strand and
-                    abs(frag.to_start - core_to_start) < args.max and
-                    abs(frag.to_end - core_to_end) < args.max and
-                    in_order(frag, summit_frag)
-                ):
+                if in_order(frag, summit_frag, args.max):
                     uni_region.frags.append(frag)
             if uni_region.length("from") / region.length("from") > 0.7:
                 uni_region.merge_all_frags()
