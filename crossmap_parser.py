@@ -52,7 +52,7 @@ class Region:
                 frag1.to_chr == frag2.to_chr and
                 frag1.to_strand == frag2.to_strand and
                 abs(max(frag1.to_start, frag2.to_start) - min(frag1.to_end, frag2.to_end)) < distance and
-                frag2.to_end > frag1.to_end if (frag1.to_strand == "+") else frag2.to_start < frag1.to_start)
+                frag2.to_start > frag1.to_start if (frag1.to_strand == "+") else frag2.to_end < frag1.to_end)
 
     def combine_frags(self, size_limit):
         ''' Combine frags based on chr, strand, and within size_limit.'''
@@ -78,14 +78,7 @@ class Region:
                     key_index = key + str(i + 1)
                     frag_dict[key_index] = frag_dict[key][split_pos[i]:]
                     frag_dict.pop(key)
-
-
-
-
-
-        for key in frag_dict:
-            to_start_list = [x.to_start for x in frag_dict[key]]
-            to_end_list = [x.to_end for x in frag_dict[key]]
+        self.frags = frag_dict.values()
 
 
 class Frag:
@@ -188,15 +181,16 @@ def main():
                         last_region.frags.append(frag)
 
     for region in regions:
-        summit_frag_list = region.summit_frag_list()
-        if len(summit_frag_list) > 0:
-            summit_frag = summit_frag_list[0]
-            uni_region = Region()
-            for frag in region.frags:
-                if in_order(frag, summit_frag, args.max):
-                    uni_region.frags.append(frag)
-            if uni_region.length("from") / region.length("from") > 0.7:
-                uni_region.merge_all_frags()
+        region.combine_frags(args.max)
+        # summit_frag_list = region.summit_frag_list()
+        # if len(summit_frag_list) > 0:
+        #     summit_frag = summit_frag_list[0]
+        #     uni_region = Region()
+        #     for frag in region.frags:
+        #         if in_order(frag, summit_frag, args.max):
+        #             uni_region.frags.append(frag)
+        #     if uni_region.length("from") / region.length("from") > 0.7:
+        #         uni_region.merge_all_frags()
             # else:
                 # declare not liftable region.
         # else:
