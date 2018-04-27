@@ -51,7 +51,8 @@ class Region:
                 abs(max(frag1.from_start, frag2.from_start) - min(frag1.from_end, frag2.from_end) < distance) and
                 frag1.to_chr == frag2.to_chr and
                 frag1.to_strand == frag2.to_strand and
-                abs(max(frag1.to_start, frag2.to_start) - min(frag1.to_end, frag2.to_end)) < distance)
+                abs(max(frag1.to_start, frag2.to_start) - min(frag1.to_end, frag2.to_end)) < distance and
+                frag2.to_end > frag1.to_end if (frag1.to_strand == "+") else frag2.to_start < frag1.to_start)
 
     def combine_frags(self, size_limit):
         ''' Combine frags based on chr, strand, and within size_limit.'''
@@ -62,21 +63,21 @@ class Region:
                 frag_dict[key].append(frag)
             else:
                 frag_dict[key] = [frag]
-        for key in frag_dict[key]:
+        for key in frag_dict:
             split_pos = []
             for i in range(1, len(frag_dict[key])):
                 if not self.can_merge(frag_dict[key][i - 1], frag_dict[key][i], size_limit):
                     split_pos.append(i)
             for i in range(len(split_pos)):
-                deleted_region = frag_dict.pop(key)
-                key_index = key + i
+                key_index = key + str(i)
                 if i == 0:
-                    frag_dict[key_index] = deleted_region[:split_pos[i]]
+                    frag_dict[key_index] = frag_dict[key][:split_pos[i]]
                 else:
-                    frag_dict[key_index] = deleted_region[split_pos[i - 1]:split_pos[i]]
+                    frag_dict[key_index] = frag_dict[key][split_pos[i - 1]:split_pos[i]]
                 if i + 1 not in range(len(split_pos)):
-                    key_index = key + i + 1
-                    frag_dict[key_index] = deleted_region[split_pos[i]:]
+                    key_index = key + str(i + 1)
+                    frag_dict[key_index] = frag_dict[key][split_pos[i]:]
+                    frag_dict.pop(key)
 
 
 
