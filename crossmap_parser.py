@@ -3,7 +3,6 @@ A script to parse crossmap.py results for SV project
 '''
 import sys
 import argparse
-import ipdb
 import copy
 
 
@@ -33,27 +32,6 @@ class Region:
             length += frag.length(assembly)
         return length
 
-    def merge_all_frags(self):
-        new_frag = Frag()
-        new_frag.from_chr = [x.from_chr for x in self.frags][0]
-        new_frag.from_strand = [x.from_strand for x in self.frags][0]
-        new_frag.from_start = min([x.from_start for x in self.frags])
-        new_frag.from_end = max([x.from_end for x in self.frags])
-        new_frag.to_chr = [x.to_chr for x in self.frags][0]
-        new_frag.to_strand = [x.to_strand for x in self.frags][0]
-        new_frag.to_start = min([x.to_start for x in self.frags])
-        new_frag.to_end = max([x.to_end for x in self.frags])
-        self.frags = [new_frag]
-
-    def can_merge(frag1, frag2, distance):
-        return (frag1.from_chr == frag2.from_chr and
-                frag1.from_strand == frag2.from_strand and
-                abs(max(frag1.from_start, frag2.from_start) - min(frag1.from_end, frag2.from_end) < distance) and
-                frag1.to_chr == frag2.to_chr and
-                frag1.to_strand == frag2.to_strand and
-                abs(max(frag1.to_start, frag2.to_start) - min(frag1.to_end, frag2.to_end)) < distance and
-                frag2.to_start > frag1.to_start if (frag1.to_strand == "+") else frag2.to_end < frag1.to_end)
-
     def combine_frags(self, size_limit):
         ''' Combine frags based on chr, strand, and within size_limit.'''
         frag_dict = {}
@@ -63,22 +41,63 @@ class Region:
                 frag_dict[key].append(frag)
             else:
                 frag_dict[key] = [frag]
+        combined_frag_dict = {}
         for key in frag_dict:
             split_pos = []
             for i in range(1, len(frag_dict[key])):
-                if not self.can_merge(frag_dict[key][i - 1], frag_dict[key][i], size_limit):
+                if not Region.can_merge(frag_dict[key][i - 1], frag_dict[key][i], size_limit):
                     split_pos.append(i)
+            if not len(split_pos):
+                combined_frag_dict[key] = frag_dict[key]
             for i in range(len(split_pos)):
                 key_index = key + str(i)
                 if i == 0:
-                    frag_dict[key_index] = frag_dict[key][:split_pos[i]]
+                    combined_frag_dict[key_index] = frag_dict[key][:split_pos[i]]
                 else:
-                    frag_dict[key_index] = frag_dict[key][split_pos[i - 1]:split_pos[i]]
+                    combined_frag_dict[key_index] = frag_dict[key][split_pos[i - 1]:split_pos[i]]
                 if i + 1 not in range(len(split_pos)):
                     key_index = key + str(i + 1)
-                    frag_dict[key_index] = frag_dict[key][split_pos[i]:]
-                    frag_dict.pop(key)
-        self.frags = frag_dict.values()
+                    combined_frag_dict[key_index] = frag_dict[key][split_pos[i]:]
+        self.frags = []
+        for key_index in combined_frag_dict:
+            merged_frag = Region.merge_all_frags(combined_frag_dict[key_index])
+            self.frags.append(merged_frag)
+
+    def keep_primary(self, perc):
+        '''If primary fragments found (frag with summit), then delele frags that are less then given perctage of total length'''
+        self.from_summit
+        length = self.length("from")
+        can_remove = []
+        found_primary = False
+        for i, frag in enumerate(self.frags):
+            if frag.length("from") / length < perc:
+                can_remove.append(i)
+            if self.from_summit > frag.from_start and self.from_summit < frag.from_end:
+                found_primary = True
+        if found_primary:
+            self.frags = [i for j, i in enumerate(self.frags) if j not in can_remove]
+
+    @staticmethod
+    def merge_all_frags(frag_list):
+        new_frag = Frag()
+        new_frag.from_chr = [x.from_chr for x in frag_list][0]
+        new_frag.from_strand = [x.from_strand for x in frag_list][0]
+        new_frag.from_start = min([x.from_start for x in frag_list])
+        new_frag.from_end = max([x.from_end for x in frag_list])
+        new_frag.to_chr = [x.to_chr for x in frag_list][0]
+        new_frag.to_strand = [x.to_strand for x in frag_list][0]
+        new_frag.to_start = min([x.to_start for x in frag_list])
+        new_frag.to_end = max([x.to_end for x in frag_list])
+        return new_frag
+
+    def can_merge(frag1, frag2, distance):
+        return (frag1.from_chr == frag2.from_chr and
+                frag1.from_strand == frag2.from_strand and
+                abs(max(frag1.from_start, frag2.from_start) - min(frag1.from_end, frag2.from_end) < distance) and
+                frag1.to_chr == frag2.to_chr and
+                frag1.to_strand == frag2.to_strand and
+                abs(max(frag1.to_start, frag2.to_start) - min(frag1.to_end, frag2.to_end)) < distance and
+                (frag2.to_start > frag1.to_start if (frag1.to_strand == "+") else frag2.to_end < frag1.to_end))
 
 
 class Frag:
@@ -117,20 +136,6 @@ class Frag:
         return length
 
 
-def in_order(frag1, frag2, size_limit):
-    return (frag1.from_chr == frag2.from_chr and
-            frag1.from_strand == frag2.from_strand and
-            frag1.to_chr == frag2.to_chr and
-            frag1.to_strand == frag2.to_strand and
-            abs(frag1.to_start - frag2.to_start) < size_limit and
-            abs(frag1.to_end - frag2.to_end) < size_limit and
-            (
-                (frag1.to_strand == "+" and (frag1.from_start - frag2.from_start) * (frag1.to_start - frag2.to_start) > 0) or
-                (frag1.to_strand == "-" and (frag1.from_start - frag2.from_start) * (frag1.to_start - frag2.to_start) < 0)
-            )
-            )
-
-
 def _get_args():
     parser = argparse.ArgumentParser(description='simple arguments')
     parser.add_argument(
@@ -155,6 +160,14 @@ def _get_args():
         dest="max",
         default=50000,
         help='The distance used to define the max of peak size',
+    )
+    parser.add_argument(
+        '--perc',
+        '-p',
+        action="store",
+        dest="perc",
+        default=0.2,
+        help='Threshold to remove non-primary fragments (fraction of total region length)',
     )
     return parser.parse_args()
 
@@ -182,23 +195,11 @@ def main():
 
     for region in regions:
         region.combine_frags(args.max)
-        # summit_frag_list = region.summit_frag_list()
-        # if len(summit_frag_list) > 0:
-        #     summit_frag = summit_frag_list[0]
-        #     uni_region = Region()
-        #     for frag in region.frags:
-        #         if in_order(frag, summit_frag, args.max):
-        #             uni_region.frags.append(frag)
-        #     if uni_region.length("from") / region.length("from") > 0.7:
-        #         uni_region.merge_all_frags()
-            # else:
-                # declare not liftable region.
-        # else:
-            # declare not liftable region.
+        region.keep_primary(args.perc)
+
         for frag in region.frags:
-            print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" %
-                  (region.from_chr, region.from_start, region.from_end, region.from_strand, region.from_summit, region.from_signal,
-                   frag.from_chr, frag.from_start, frag.from_end, frag.from_strand,
+            print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" %
+                  (frag.from_chr, frag.from_start, frag.from_end, frag.from_strand, region.from_summit, region.from_signal,
                    frag.to_chr, frag.to_start, frag.to_end, frag.to_strand))
 
 
