@@ -35,6 +35,7 @@ class Region:
     def combine_frags(self, size_limit):
         ''' Combine frags based on chr, strand, and within size_limit.'''
         frag_dict = {}
+
         for frag in self.frags:
             key = frag.to_chr + frag.to_strand
             if key in frag_dict:
@@ -97,7 +98,7 @@ class Region:
                 frag1.to_chr == frag2.to_chr and
                 frag1.to_strand == frag2.to_strand and
                 abs(max(frag1.to_start, frag2.to_start) - min(frag1.to_end, frag2.to_end)) < distance and
-                (frag2.to_start > frag1.to_start if (frag1.to_strand == "+") else frag2.to_end < frag1.to_end))
+                (frag2.to_start >= frag1.to_start if (frag1.to_strand == "+") else frag2.to_end <= frag1.to_end))
 
 
 class Frag:
