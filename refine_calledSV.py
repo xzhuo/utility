@@ -3,9 +3,8 @@ A script to process sv_calls result bed file from zev's DASVC pipeline. https://
 It will combine "insertion" and "deletion" in the same locus into a "replace" SV,
 and get exact INDEL positions for query genome (the query starts and ends are starts and ends of alignment block in the sv_calls file).
 '''
-import sys
+
 import argparse
-import ipdb
 
 
 def _get_args():
@@ -101,7 +100,6 @@ def get_query(bam, target_name, target_start, target_end, stringent):
                 else:
                     last_value = position_dict[x[1] - 1]  # last one!
                     position_dict.update({x[1]: last_value})
-
 
         # start_list = [x[0] for x in position_pairs if x[1] == target_start]
         # end_list = [x[0] for x in position_pairs if x[1] == target_end]
@@ -225,7 +223,6 @@ def merge_line(last_line, line):
         line = last_line + "\n" + line
     return line
 
-
     # linelist[3] = "REPLACE"
     # linelist[8] = last_linelist[8]
     # linelist[9] = last_linelist[9]
@@ -242,7 +239,7 @@ def correct_reverse_between(bam, line):
     import pysam
     target_name, target_start, target_end, sv_type, sv_length, per_id, matching_bases, query_name, query_start, query_end, sequence = splitline(line, "BETWEEN")
     samfile = pysam.AlignmentFile(bam, "rb")
-    for read in samfile.fetch(target_name, target_start - 1, target_end + 1):
+    for read in samfile.fetch(target_name, target_start - 20, target_end + 20):  # the empty site is always < 20bp. so +- 20bp is enough here.
         if read.is_reverse:
             if read.get_tag("TE") == target_start:
                 query_start = read.get_tag("QS")
