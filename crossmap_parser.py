@@ -15,7 +15,7 @@ class Region:
         self.from_chr = list[0]
         self.from_start = int(list[1])
         self.from_end = int(list[2])
-        self.from_summit = int(list[3])
+        self.from_summit = "." if list[3] == "." else int(list[3])
         self.from_signal = list[4]
         self.from_strand = list[5]
         self.frags = []
