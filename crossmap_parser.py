@@ -63,7 +63,7 @@ class Region:
             merged_frag = Region.merge_all_frags(combined_frag_dict[key_index])
             self.frags.append(merged_frag)
 
-    def keep_primary(self, perc):
+    def keep_primary(self, perc, broad):
         '''If primary fragments found (frag with summit), then delele frags that are less then given perctage of total length'''
         self.from_summit
         length = self.length("from")
@@ -72,7 +72,7 @@ class Region:
         for i, frag in enumerate(self.frags):
             if frag.length("from") / length < perc:
                 can_remove.append(i)
-            if self.from_summit > frag.from_start and self.from_summit < frag.from_end:
+            if broad or (self.from_summit > frag.from_start and self.from_summit < frag.from_end):  # broad is True if it is working with broadPeak. then remove small fragments anyway.
                 found_primary = True
         if found_primary:
             self.frags = [i for j, i in enumerate(self.frags) if j not in can_remove]
@@ -172,6 +172,14 @@ def _get_args():
         default=0.2,
         help='Threshold to remove non-primary fragments (fraction of total region length)',
     )
+    parser.add_argument(
+        '--broad',
+        '-b',
+        action="store_true",
+        dest="broad",
+        default=False,
+        help='If the input peaks are broadpeaks (broad peaks do not have summit defined)',
+    )
     return parser.parse_args()
 
 
@@ -198,7 +206,7 @@ def main():
 
     for region in regions:
         region.combine_frags(args.max, args.distance)
-        region.keep_primary(args.perc)
+        region.keep_primary(args.perc, args.broad)
 
         for frag in region.frags:
             print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" %
