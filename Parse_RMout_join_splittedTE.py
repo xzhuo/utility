@@ -20,17 +20,17 @@ def _get_args():
         help='The target TE subfamily name.',
     )
     parser.add_argument(
-        '--left',
-        '-l',
+        '--end',
+        '-e',
         action="store",
-        dest="left",
+        dest="end",
         help="number of missing bps tolerated at the end of TE.",
     )
     parser.add_argument(
-        '--right',
-        '-r',
+        '--start',
+        '-s',
         action="store",
-        dest="right",
+        dest="start",
         help='number of missing bps tolerated at the start of TE.',
     )
     return parser.parse_args()
@@ -40,7 +40,7 @@ def main():
     args = _get_args()
     file = args.file
     TE = args.te
-    TEleft_cut = int(args.left)
+    TEleft_cut = int(args.end)
     # file = "/Users/xiaoyu/project/mm10_TE_RM/mm10_RM.fa.out"
 
     infile = open(file, "r")
@@ -97,14 +97,14 @@ def main():
         else:
             if bool(last_TE) and last_TE["repLeft"] < TEleft_cut:
                 # print last_TE in bed format
-                if not (args.right and last_TE["repStart"] - 1 > int(args.right)):  # don't print only if args.right exists and repStart bigger than it.
+                if not (args.start and last_TE["repStart"] - 1 > int(args.right)):  # don't print only if args.start exists and repStart bigger than it.
                     outfile.write("%s\t%d\t%d\t%s\t%d\t%s\t%s\t%s\t%s\n" % (last_TE["chr"], last_TE["chrStart"], last_TE["chrEnd"], last_TE["TEname"], last_TE["SWscore"], last_TE["strand"], last_TE["repStart"], last_TE["repEnd"], last_TE["repLeft"]))
 
             last_TE = curr_TE
     # after loop print last_TE in bed format if bool(last_TE)
     if bool(last_TE) and last_TE["repLeft"] < TEleft_cut:
         # print last_TE in bed format
-        if not (args.right and last_TE["repStart"] - 1 > int(args.right)):  # don't print only if args.right exists and repStart bigger than it.
+        if not (args.start and last_TE["repStart"] - 1 > int(args.right)):  # don't print only if args.start exists and repStart bigger than it.
             outfile.write("%s\t%d\t%d\t%s\t%d\t%s\t%s\t%s\t%s\n" % (last_TE["chr"], last_TE["chrStart"], last_TE["chrEnd"], last_TE["TEname"], last_TE["SWscore"], last_TE["strand"], last_TE["repStart"], last_TE["repEnd"], last_TE["repLeft"]))
 
     outfile.close()
