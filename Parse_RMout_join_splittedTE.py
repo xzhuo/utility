@@ -59,14 +59,14 @@ for index, line in enumerate(all_lines):
         last_TE["SWscore"] += curr_TE["SWscore"]
 
     else:
-        if bool(last_TE) and last_TE["repLeft"] < TEleft_cut:
+        if bool(last_TE) and last_TE["repLeft"] < TEleft_cut and last_TE["repStart"] < TEleft_cut:
             # print last_TE in bed format
             outfile.write("%s\t%d\t%d\t%s\t%d\t%s\t%s\t%s\t%s\n" % (last_TE["chr"], last_TE["chrStart"], last_TE["chrEnd"], last_TE["TEname"], last_TE["SWscore"], last_TE["strand"], last_TE["repStart"], last_TE["repEnd"], last_TE["repLeft"]))
 
         last_TE = curr_TE
 
 # after loop print last_TE in bed format if bool(last_TE)
-if bool(last_TE) and last_TE["repLeft"] < TEleft_cut:
+if bool(last_TE) and last_TE["repLeft"] < TEleft_cut and last_TE["repStart"] < TEleft_cut:
     # print last_TE in bed format
     outfile.write("%s\t%d\t%d\t%s\t%d\t%s\t%s\t%s\t%s\n" % (last_TE["chr"], last_TE["chrStart"], last_TE["chrEnd"], last_TE["TEname"], last_TE["SWscore"], last_TE["strand"], last_TE["repStart"], last_TE["repEnd"], last_TE["repLeft"]))
 
