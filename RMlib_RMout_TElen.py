@@ -22,21 +22,60 @@ infile = open(RMout, "r")
 line = infile.readline()
 for line in infile:
     line = line.split()
-    if not (line == [] or line[0] == 'SW' or line[0] == 'score'):  # for UCSC RMout
-        chr = line[5]
-        start = int(line[6])
-        end = int(line[7])
-        name = line[10]
-        TEclass = line[11]
-        RepEnd = int(line[14])
+    if not (line == [] or line[0] == 'SW' or line[0] == 'score'):
+        # for UCSC RMout
+        # chr = line[5]
+        # start = int(line[6])
+        # end = int(line[7])
+        # name = line[10]
+        # TEclass = line[11]
+        # RepEnd = int(line[14])
+        # score = float(line[1])
+        # strand = line[9]
+        # RepStart = int(line[13])
+        # RepLeft = int(line[15])
+        # if strand == '-':
+        #     RepStart = int(line[15])
+        #     RepLeft = int(line[13])
+
+        # for standard rm out:
+        chr = line[4]
+        start = int(line[5])
+        end = int(line[6])
         score = float(line[1])
-        strand = line[9]
-        RepStart = int(line[13])
-        RepLeft = int(line[15])
-        if strand == '-':
-            RepStart = int(line[15])
-            RepLeft = int(line[13])
-            # RepLeft = int(line[11].translate({ord('('): None, ord(')'): None}))  # if I have to go back
+        # for Repeatmasker open 4.0+:
+        # ID = line[-1]
+        # if line[8] == 'C':
+        #     strand = line[8]
+        #     nameclass = line[9]
+        #     names = nameclass.split('#')
+        #     name = names[0]
+        #     TEclass = names[1]
+        #     RepStart = line[12]
+        #     RepEnd = int(line[11])
+        #     RepLeft = int(line[10].translate({ord('('): None, ord(')'): None}))
+        # else:
+        #     strand = '+'
+        #     nameclass = line[8]
+        #     names = nameclass.split('#')
+        #     name = names[0]
+        #     TEclass = names[1]
+        #     RepStart = line[9]
+        #     RepEnd = int(line[10])
+        #     RepLeft = int(line[11].translate({ord('('): None, ord(')'): None}))
+
+        # for Repeatmasker open 3.0:
+        strand = line[8]
+        name = line[9]
+        TEclass = line[10]
+        RepEnd = int(line[12])
+        if strand == '+':
+            RepStart = line[11]
+            RepLeft = int(line[13].translate({ord('('): None, ord(')'): None}))
+        if strand == 'C':
+            RepStart = line[13]
+            RepLeft = int(line[11].translate({ord('('): None, ord(')'): None}))
+
         length = end - start
         RepLength = RepEnd - RepLeft
         if TEclass not in unwant:
