@@ -65,7 +65,7 @@ with tempfile.NamedTemporaryFile('w+') as tempembl:
             astr = "%s:%s" % (RMfile, aname)
             bstr = "%s:%s" % (RMfile, bname)
             # bstr = "asis::%s" % bseq
-            water_cline = WaterCommandline(r"/Users/Xiaoyu/EMBOSS/EMBOSS-6.6.0/emboss/water",
+            water_cline = WaterCommandline(r"/bar/xzhuo/EMBOSS/EMBOSS-6.6.0/emboss/water",
                                            asequence=astr,
                                            bsequence=bstr,
                                            gapopen=16, gapextend=4, aformat="pair",
