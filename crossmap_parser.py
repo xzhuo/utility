@@ -89,7 +89,8 @@ class Region:
         new_frag.to_start = min([x.to_start for x in frag_list])
         new_frag.to_end = max([x.to_end for x in frag_list])
         return new_frag
-
+    
+    @staticmethod
     def can_merge(frag1, frag2, distance, mini):
         from_gap = abs(max(frag1.from_start, frag2.from_start) - min(frag1.from_end, frag2.from_end))
         to_gap = abs(max(frag1.to_start, frag2.to_start) - min(frag1.to_end, frag2.to_end))
