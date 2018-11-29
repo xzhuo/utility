@@ -208,8 +208,12 @@ def main():
     for region in regions:
         region.combine_frags(args.max, args.distance)
         region.keep_primary(args.perc, args.broad)
-
-        for frag in region.frags:
+        num_frags = len(region.frags)
+        for index, frag in enumerate(region.frags):
+            if index == 0:
+                frag.from_start = region.from_start
+            elif index == num_frags - 1:
+                frag.from_end = region.from_end
             print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" %
                   (frag.from_chr, frag.from_start, frag.from_end, frag.from_strand, region.from_summit, region.from_signal,
                    frag.to_chr, frag.to_start, frag.to_end, frag.to_strand))
