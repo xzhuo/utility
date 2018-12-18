@@ -193,7 +193,7 @@ def main():
             line = line.rstrip()
             split = line.split()[6]
             if split != 'Fail':
-                if split == '->' or split.startswith('(split.1:'):
+                if not (hasattr(last_region, 'from_chr') and line.split()[0] == last_region.from_chr and line.split()[1] == last_region.from_start and line.split()[2] == last_region.from_end):
                     if len(last_region.frags) > 0:
                         regions.append(copy.deepcopy(last_region))
                     last_region.start_line(line)
