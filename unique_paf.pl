@@ -11,7 +11,7 @@
 				$last_as=$prop{"AS"};
 			}
 		}else{
-			print $last_;
+			print $last_ if $last_;
 			$last_=$_;
 			$last_chr,$last_start,$last_end=$chr,$start,$end;
 			$last_as=$prop{"AS"};
