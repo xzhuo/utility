@@ -9,7 +9,7 @@ def read_line(infile, outfile):
         line = line.split()
         if not (line == [] or line[0] == 'SW' or line[0] == 'score'):
             chrom = line[4]
-            start = int(line[5])
+            start = int(line[5]) - 1  # convert to 0 based.
             end = int(line[6])
             name = line[9]
             score = 0
@@ -46,7 +46,7 @@ if file[-7:] == '.tar.gz':
         for member in tar.getmembers():
             f = tar.extractfile(member)
             if f is not None:
-                f = codecs.getreader("utf-8")(f) # convert input from binary to text
+                f = codecs.getreader("utf-8")(f)  # convert input from binary to text
                 # read_line(f.readlines(), outfile)
                 # read_line(f.read(), outfile)
                 read_line(f, outfile)
