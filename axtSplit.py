@@ -77,6 +77,6 @@ with open(sys.argv[2]) as fin:
 
 with open(sys.argv[3], 'w') as fout:
     for index, align in enumerate(all_aligns):
-        fout.write('{0} {1} {2}\t{3} {4} {5} {6} {7}\n'.format(index, align['ref_chr'], align['ref_start'], align['ref_end'], 
+        fout.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(index, align['ref_chr'], align['ref_start'], align['ref_end'], 
                    align['query_chr'], align['query_start'], align['query_end'], align['strand']))
         fout.write('{}\n{}\n\n'.format(align['seqs'][0], align['seqs'][1]))
