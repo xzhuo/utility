@@ -5,17 +5,22 @@ import pysam
 
 def attach_tags(bam_file, tag_file, out_file):
     hash = {}
-    tag_pysam = pysam.AlignmentFile(tag_file, threads = 8)
-    for read in tag_pysam.fetch():
-        try:
-            Mm = read.get_tag("Mm")
-            Ml = read.get_tag("Ml")
-            hash[read.query_name] = {'Mm': Mm, 'Ml': Ml}
-        except:
-            MM = read.get_tag("MM")
-            ML = read.get_tag("ML")
-            hash[read.query_name] = {'MM': MM, 'ML': ML}
-    tag_pysam.close()
+    if os.path.isfile(tag_file):
+        tag_files = [tag_file]
+    else:
+        tag_files = [x for x in os.listdir(tag_file) if len(x) >= 4 and x[-4:] == ".bam"]
+    for f in tag_files:
+        tag_pysam = pysam.AlignmentFile(f, threads = 8)
+        for read in tag_pysam.fetch():
+            try:
+                Mm = read.get_tag("Mm")
+                Ml = read.get_tag("Ml")
+                hash[read.query_name] = {'Mm': Mm, 'Ml': Ml}
+            except:
+                MM = read.get_tag("MM")
+                ML = read.get_tag("ML")
+                hash[read.query_name] = {'MM': MM, 'ML': ML}
+        tag_pysam.close()
 
     bam = pysam.AlignmentFile(bam_file, threads = 8)
     out = pysam.AlignmentFile(out_file, "wb", template=bam, threads = 8)
@@ -38,7 +43,7 @@ def main():
     parser.add_argument('-b', '--bam', type=str, required=True,
                         help='input bam file without the desired tags')
     parser.add_argument('-t', '--tag', type=str, required=True,
-                        help='bam file with tags')
+                        help='bam file with tags, or dir with these bam files')
     parser.add_argument('-o', '--out', type=str, required=True,
                         help='output bam file with Ml and Mm tags attached')
 
