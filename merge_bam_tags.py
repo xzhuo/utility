@@ -30,10 +30,10 @@ def attach_tags(bam_file, tag_file, out_file):
         if query_name in hash:
             try:
                 read.set_tag('Mm', hash[query_name]['Mm'], 'Z')
-                read.set_tag('Ml', hash[query_name]['Ml'], 'B')
+                read.set_tag('Ml', hash[query_name]['Ml'])
             except:
                 read.set_tag('MM', hash[query_name]['MM'], 'Z')
-                read.set_tag('ML', hash[query_name]['ML'], 'B')
+                read.set_tag('ML', hash[query_name]['ML'])
         out.write(read)
 
     out.close()
