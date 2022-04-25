@@ -8,7 +8,8 @@ def attach_tags(bam_file, tag_file, out_file):
     if os.path.isfile(tag_file):
         tag_files = [tag_file]
     else:
-        tag_files = [x for x in os.listdir(tag_file) if len(x) >= 4 and x[-4:] == ".bam"]
+        tag_files = [os.path.join(tag_file, x) for x in os.listdir(tag_file) if len(x) >= 4 and x[-4:] == ".bam"]
+
     for f in tag_files:
         tag_pysam = pysam.AlignmentFile(f, threads = 8)
         for read in tag_pysam.fetch():
