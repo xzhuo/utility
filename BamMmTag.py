@@ -5,10 +5,13 @@ def modify_tags(bam_file, out_file):
     bam = pysam.AlignmentFile(bam_file, threads = 8)
     out = pysam.AlignmentFile(out_file, "wb", template=bam, threads = 8)
     for read in bam.fetch(until_eof=True):
-        Mm = read.get_tag("Mm")
-        if Mm[3]=="?":
-            Mm = Mm[:3]+Mm[4:]
-        read.set_tag('Mm', Mm)
+        try:
+            Mm = read.get_tag("Mm")
+            if Mm[3]=="?":
+                Mm = Mm[:3]+Mm[4:]
+            read.set_tag('Mm', Mm)
+        except:
+            pass
         out.write(read)
 
     out.close()
