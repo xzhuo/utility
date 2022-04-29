@@ -1,5 +1,6 @@
 import os
 import argparse
+from turtle import left
 import pysam
 
 
@@ -30,17 +31,26 @@ def attach_tags(bam_file, tag_file, out_file):
     out = pysam.AlignmentFile(out_file, "wb", template=bam, threads = 8)
     for read in bam.fetch():
         query_name = read.query_name
-        if query_name in hash:  # only do it to primary reads with seq.
+        if query_name in hash:
+            try:
+                Mm_string = hash[query_name]['Mm']
+            except:
+                Mm_string = hash[query_name]['MM']
             if not read.infer_query_length() == read.infer_read_length():
                 cigar = read.cigartuples()
                 if cigar[0][0] == 5:
-                    left_clip = cigar[0][1]
+                    left_clip_length = cigar[0][1]
+                    # revcom if necessary:
+                    left_clip_seq = hash[query_name]['seq'][:left_clip_length]
+                    numC = left_clip_seq.count('C') + left_clip_seq.count('c')
+                    Mm = Mm_string.splt(",")
+                    Mm_list = [x - numC if x.isnumeric else x for x in Mm]
+                    Mm_string = ','.join(Mm_list)
 
+            read.set_tag('Mm', Mm_string, 'Z')
             try:
-                read.set_tag('Mm', hash[query_name]['Mm'], 'Z')
                 read.set_tag('Ml', hash[query_name]['Ml'])
             except:
-                read.set_tag('MM', hash[query_name]['MM'], 'Z')
                 read.set_tag('ML', hash[query_name]['ML'])
         out.write(read)
 
