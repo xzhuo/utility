@@ -16,6 +16,8 @@ def attach_tags(bam_file, tag_file, out_file):
             try:
                 Mm = read.get_tag("Mm")
                 Ml = read.get_tag("Ml")
+                if Mm[3]=="?":
+                    Mm = Mm[:3]+Mm[4:]
                 hash[read.query_name] = {'Mm': Mm, 'Ml': Ml}
             except:
                 MM = read.get_tag("MM")
@@ -27,7 +29,7 @@ def attach_tags(bam_file, tag_file, out_file):
     out = pysam.AlignmentFile(out_file, "wb", template=bam, threads = 8)
     for read in bam.fetch():
         query_name = read.query_name
-        if query_name in hash and read.query_length > 0:  # only do it to primary reads with seq.
+        if query_name in hash:  # only do it to primary reads with seq.
             try:
                 read.set_tag('Mm', hash[query_name]['Mm'], 'Z')
                 read.set_tag('Ml', hash[query_name]['Ml'])
