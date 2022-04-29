@@ -1,5 +1,5 @@
 import pysam
-
+import argparse
 
 def modify_tags(bam_file, out_file):
     bam = pysam.AlignmentFile(bam_file, threads = 8)
