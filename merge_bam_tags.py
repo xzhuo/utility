@@ -13,16 +13,17 @@ def attach_tags(bam_file, tag_file, out_file):
     for f in tag_files:
         tag_pysam = pysam.AlignmentFile(f, check_sq=False, threads = 8)
         for read in tag_pysam.fetch(until_eof=True):
+            seq = read.get_forward_sequence()
             try:
                 Mm = read.get_tag("Mm")
                 Ml = read.get_tag("Ml")
                 if Mm[3]=="?":
                     Mm = Mm[:3]+Mm[4:]
-                hash[read.query_name] = {'Mm': Mm, 'Ml': Ml}
+                hash[read.query_name] = {'Mm': Mm, 'Ml': Ml, 'seq': seq}
             except:
                 MM = read.get_tag("MM")
                 ML = read.get_tag("ML")
-                hash[read.query_name] = {'MM': MM, 'ML': ML}
+                hash[read.query_name] = {'MM': MM, 'ML': ML, 'seq': seq}
         tag_pysam.close()
 
     bam = pysam.AlignmentFile(bam_file, threads = 8)
@@ -30,6 +31,11 @@ def attach_tags(bam_file, tag_file, out_file):
     for read in bam.fetch():
         query_name = read.query_name
         if query_name in hash:  # only do it to primary reads with seq.
+            if not read.infer_query_length() == read.infer_read_length():
+                cigar = read.cigartuples()
+                if cigar[0][0] == 5:
+                    left_clip = cigar[0][1]
+
             try:
                 read.set_tag('Mm', hash[query_name]['Mm'], 'Z')
                 read.set_tag('Ml', hash[query_name]['Ml'])
