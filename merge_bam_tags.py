@@ -43,12 +43,12 @@ def attach_tags(bam_file, tag_file, out_file):
                 Ml_array = hash[query_name]['Ml']
             except:
                 Ml_array = hash[query_name]['ML']
-            if not read.infer_query_length() == read.infer_read_length():
-                cigar = read.cigartuples()
+            if not read.infer_query_length == read.infer_read_length:
+                cigar = read.cigartuples
                 if cigar[0][0] == 5:
                     left_clip_length = cigar[0][1]
                     # revcom if necessary:
-                    seq = revcom(hash[query_name]['seq']) if read.is_reverse() else hash[query_name]['seq']
+                    seq = revcom(hash[query_name]['seq']) if read.is_reverse else hash[query_name]['seq']
                     left_clip_seq = seq[:left_clip_length]
                     numC = left_clip_seq.count('C') + left_clip_seq.count('c')
                     Mm_list = Mm_string.splt(",")
