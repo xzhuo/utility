@@ -53,7 +53,7 @@ def attach_tags(bam_file, tag_file, out_file):
                     numC = left_clip_seq.count('C') + left_clip_seq.count('c')
                     Mm_list = Mm_string.split(",")
                     Mm_type = Mm_list.pop(0)
-                    Mm_list = map(int, Mm_list)
+                    Mm_list = list(map(int, Mm_list))
                     while numC > 0:
                         if Mm_list[0]>=numC:
                             Mm_list[0]-=numC
