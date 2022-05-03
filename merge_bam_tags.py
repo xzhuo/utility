@@ -1,6 +1,7 @@
 import os
 import argparse
 import pysam
+from copy import copy
 
 def revcom(seq):
     tab = str.maketrans("ACGTacgt", "TGCAtgca")
@@ -40,9 +41,9 @@ def attach_tags(bam_file, tag_file, out_file):
             except:
                 Mm_string = hash[query_name]['MM']
             try:
-                Ml_array = hash[query_name]['Ml']
+                Ml_array = copy(hash[query_name]['Ml'])
             except:
-                Ml_array = hash[query_name]['ML']
+                Ml_array = copy(hash[query_name]['ML'])
             if not read.infer_query_length == read.infer_read_length:
                 cigar = read.cigartuples
                 if cigar[0][0] == 5:
@@ -59,11 +60,13 @@ def attach_tags(bam_file, tag_file, out_file):
                     Mm_list = Mm_string.split(",")
                     Mm_type = Mm_list.pop(0)
                     Mm_list = list(map(int, Mm_list))
-                    while numC > 0:
+                    while numC > 0 and len(Mm_list) > 0:
                         if Mm_list[0]>=numC:
                             Mm_list[0]-=numC
                             numC = 0
                         else:
+                            if len(Mm_list) != len(Ml_array):
+                                breakpoint()
                             first = Mm_list.pop(0)
                             numC -= first+1
                             Ml_array.pop(0)
