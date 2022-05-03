@@ -51,7 +51,7 @@ def attach_tags(bam_file, tag_file, out_file):
                     seq = revcom(hash[query_name]['seq']) if read.is_reverse else hash[query_name]['seq']
                     left_clip_seq = seq[:left_clip_length]
                     numC = left_clip_seq.count('C') + left_clip_seq.count('c')
-                    Mm_list = Mm_string.splt(",")
+                    Mm_list = Mm_string.split(",")
                     Mm_type = Mm_list.pop(0)
                     while numC > 0:
                         if Mm_list[0]>=numC:
