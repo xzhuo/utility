@@ -51,6 +51,11 @@ def attach_tags(bam_file, tag_file, out_file):
                     seq = revcom(hash[query_name]['seq']) if read.is_reverse else hash[query_name]['seq']
                     left_clip_seq = seq[:left_clip_length]
                     numC = left_clip_seq.count('C') + left_clip_seq.count('c')
+                    Mm_string_tail = ""
+                    if Mm_string[-1:] == ";":
+                        Mm_string = Mm_string[:-1]
+                        Mm_string_tail = ";"
+                    
                     Mm_list = Mm_string.split(",")
                     Mm_type = Mm_list.pop(0)
                     Mm_list = list(map(int, Mm_list))
@@ -63,7 +68,7 @@ def attach_tags(bam_file, tag_file, out_file):
                             numC -= first+1
                             Ml_array.pop(0)
                     Mm_list.insert(0, Mm_type)
-                    Mm_string = ','.join(Mm_list)
+                    Mm_string = ','.join(Mm_list) + Mm_string_tail
 
             read.set_tag('Mm', Mm_string, 'Z')
             read.set_tag('Ml', Ml_array)
