@@ -67,6 +67,7 @@ def attach_tags(bam_file, tag_file, out_file):
                             first = Mm_list.pop(0)
                             numC -= first+1
                             Ml_array.pop(0)
+                    Mm_list = list(map(str, Mm_list))
                     Mm_list.insert(0, Mm_type)
                     Mm_string = ','.join(Mm_list) + Mm_string_tail
 
