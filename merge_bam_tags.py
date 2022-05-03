@@ -1,8 +1,10 @@
 import os
 import argparse
-from turtle import left
 import pysam
 
+def revcom(seq):
+    tab = str.maketrans("ACGTacgt", "TGCAtgca")
+    return seq.translate(tab)[::-1]
 
 def attach_tags(bam_file, tag_file, out_file):
     hash = {}
@@ -14,17 +16,18 @@ def attach_tags(bam_file, tag_file, out_file):
     for f in tag_files:
         tag_pysam = pysam.AlignmentFile(f, check_sq=False, threads = 8)
         for read in tag_pysam.fetch(until_eof=True):
-            seq = read.get_forward_sequence()
-            try:
-                Mm = read.get_tag("Mm")
-                Ml = read.get_tag("Ml")
-                if Mm[3]=="?":
-                    Mm = Mm[:3]+Mm[4:]
-                hash[read.query_name] = {'Mm': Mm, 'Ml': Ml, 'seq': seq}
-            except:
-                MM = read.get_tag("MM")
-                ML = read.get_tag("ML")
-                hash[read.query_name] = {'MM': MM, 'ML': ML, 'seq': seq}
+            if read.infer_query_length() == read.infer_read_length():
+                seq = read.get_forward_sequence()
+                try:
+                    Mm = read.get_tag("Mm")
+                    Ml = read.get_tag("Ml")
+                    if Mm[3]=="?":
+                        Mm = Mm[:3]+Mm[4:]
+                    hash[read.query_name] = {'Mm': Mm, 'Ml': Ml, 'seq': seq}
+                except:
+                    MM = read.get_tag("MM")
+                    ML = read.get_tag("ML")
+                    hash[read.query_name] = {'MM': MM, 'ML': ML, 'seq': seq}
         tag_pysam.close()
 
     bam = pysam.AlignmentFile(bam_file, threads = 8)
@@ -36,22 +39,33 @@ def attach_tags(bam_file, tag_file, out_file):
                 Mm_string = hash[query_name]['Mm']
             except:
                 Mm_string = hash[query_name]['MM']
+            try:
+                Ml_array = hash[query_name]['Ml']
+            except:
+                Ml_array = hash[query_name]['ML']
             if not read.infer_query_length() == read.infer_read_length():
                 cigar = read.cigartuples()
                 if cigar[0][0] == 5:
                     left_clip_length = cigar[0][1]
                     # revcom if necessary:
-                    left_clip_seq = hash[query_name]['seq'][:left_clip_length]
+                    seq = revcom(hash[query_name]['seq']) if read.is_reverse() else hash[query_name]['seq']
+                    left_clip_seq = seq[:left_clip_length]
                     numC = left_clip_seq.count('C') + left_clip_seq.count('c')
-                    Mm = Mm_string.splt(",")
-                    Mm_list = [x - numC if x.isnumeric else x for x in Mm]
+                    Mm_list = Mm_string.splt(",")
+                    Mm_type = Mm_list.pop(0)
+                    while numC > 0:
+                        if Mm_list[0]>=numC:
+                            Mm_list[0]-=numC
+                            numC = 0
+                        else:
+                            first = Mm_list.pop(0)
+                            numC -= first+1
+                            Ml_array.pop(0)
+                    Mm_list.insert(0, Mm_type)
                     Mm_string = ','.join(Mm_list)
 
             read.set_tag('Mm', Mm_string, 'Z')
-            try:
-                read.set_tag('Ml', hash[query_name]['Ml'])
-            except:
-                read.set_tag('ML', hash[query_name]['ML'])
+            read.set_tag('Ml', Ml_array)
         out.write(read)
 
     out.close()
