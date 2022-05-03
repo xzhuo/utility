@@ -72,8 +72,6 @@ def attach_tags(bam_file, tag_file, out_file):
                             Mm_list[0]-=numC
                             numC = 0
                         else:
-                            if len(Mm_list) != len(Ml_array):
-                                breakpoint()
                             first = Mm_list.pop(0)
                             numC -= first+1
                             Ml_array.pop(0)
