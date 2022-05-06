@@ -16,9 +16,9 @@ def attach_query_seq(bam_file, fasta_file, out_file):
         left_clip_length = cigar[0][1] if cigar[0][0] == 5 else 0
         right_clip_length = cigar[-1][1] if cigar[-1][0] == 5 else 0
         if not read.is_reverse:
-            read.query_sequence = fasta.fetch(reference=read.query_name, start=left_clip_length, end=left_clip_length + read.infer_read_length())
+            read.query_sequence = fasta.fetch(reference=read.query_name, start=left_clip_length, end=left_clip_length + read.infer_query_length())
         else:
-            read.query_sequence = revcom(fasta.fetch(reference=read.query_name, start=right_clip_length, end=right_clip_length + read.infer_read_length()))
+            read.query_sequence = revcom(fasta.fetch(reference=read.query_name, start=right_clip_length, end=right_clip_length + read.infer_query_length()))
         out.write(read)
     out.close()
     bam.close()
