@@ -11,9 +11,8 @@ def attach_query_seq(bam_file, fasta_file, out_file):
     bam = pysam.AlignmentFile(bam_file)
     out = pysam.AlignmentFile(out_file, "w", template=bam)
     for read in bam.fetch():
-        cigar = read.cigartuples
-        left_clip_length = cigar[0][1] if cigar[0][0] == 5 else 0
-        right_clip_length = cigar[-1][1] if cigar[-1][0] == 5 else 0
+        pairs = read.get_aligned_pairs()
+
         if not read.is_reverse:
             read.query_sequence = fasta.fetch(reference=read.query_name, start=left_clip_length, end=left_clip_length + read.infer_query_length())
         else:
@@ -43,7 +42,7 @@ def main():
         '-o',
         action="store",
         dest="out",
-        help='The output sam file with hard clipping seq',
+        help='The output axt file',
     )
     args = parser.parse_args()
 
