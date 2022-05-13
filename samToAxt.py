@@ -9,15 +9,16 @@ def revcom(seq):
 def attach_query_seq(bam_file, fasta_file, out_file):
     fasta = pysam.FastaFile(fasta_file)
     bam = pysam.AlignmentFile(bam_file)
-    out = pysam.AlignmentFile(out_file, "w", template=bam)
-    for read in bam.fetch():
+    out = open(out_file, "w")
+    for idx, read in enumerate(bam.fetch()):
         pairs = read.get_aligned_pairs()
-
-        if not read.is_reverse:
-            read.query_sequence = fasta.fetch(reference=read.query_name, start=left_clip_length, end=left_clip_length + read.infer_query_length())
-        else:
-            read.query_sequence = revcom(fasta.fetch(reference=read.query_name, start=right_clip_length, end=right_clip_length + read.infer_query_length()))
-        out.write(read)
+        strand = "-" if read.is_revserse else "+"
+        query_seq = ''.join(["-" if pos[0] == "None" else read.query_sequence[pos[0],pos[0]+1] for pos in pairs])
+        ref_seq = ''.join(["-" if pos[1] == "None" else fasta.fetch(reference=read.reference_name, start=pos[1], end=pos[1]+1) for pos in pairs])
+        cols = '\t'.join([idx, read.reference_name, read.reference_start, read.reference_end, read.query_name, read.query_start, read.query_end, strand, "60"])
+        out = cols+"\n"+query_seq+"\n"+ref_seq+"\n"
+        breakpoint()
+        out.write(out)
     out.close()
     bam.close()
 
