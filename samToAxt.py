@@ -20,7 +20,7 @@ def attach_query_seq(bam_file, fasta_file, out_file):
         #     ref_seq += "-" if pos[1] == None else fasta.fetch(reference=read.reference_name, start=pos[1], end=pos[1]+1)
         query_seq = ''.join(["-" if pos[0] == None else read.query_sequence[pos[0]] for pos in pairs])
         ref_seq = ''.join(["-" if pos[1] == None else fasta.fetch(reference=read.reference_name, start=pos[1], end=pos[1]+1) for pos in pairs])
-        cols = '\t'.join([idx, read.reference_name, read.reference_start, read.reference_end, read.query_name, read.query_alignment_start, read.query_alignment_end, strand, "60"])
+        cols = '\t'.join([str(idx), read.reference_name, read.reference_start, read.reference_end, read.query_name, read.query_alignment_start, read.query_alignment_end, strand, "60"])
         out = cols+"\n"+query_seq+"\n"+ref_seq+"\n"
         out.write(out)
     out.close()
