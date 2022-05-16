@@ -8,8 +8,8 @@ def revcom(seq):
     tab = str.maketrans("ACGTacgt", "TGCAtgca")
     return seq.translate(tab)[::-1]
 
-def convertAxt(bam_file, fasta_file, out_file, format):
-    fasta = pysam.FastaFile(fasta_file)
+def convertAxt(bam_file, ref_file, out_file, format):
+    fasta = pysam.FastaFile(ref_file)
     bam = pysam.AlignmentFile(bam_file)
     out = open(out_file, "w")
     for idx, read in enumerate(bam.fetch()):
@@ -69,7 +69,7 @@ def main():
     )
     args = parser.parse_args()
 
-    convertAxt(args.bam, args.fasta, args.out, args.format)
+    convertAxt(args.bam, args.ref, args.out, args.format)
 
 if __name__ == '__main__':
     main()
