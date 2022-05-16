@@ -1,4 +1,4 @@
-from turtle import left
+import sys
 import pysam
 import argparse
 import json
@@ -28,7 +28,7 @@ def convertAxt(bam_file, ref_file, out_file, format):
             output = cols+"\n"+query_seq+"\n"+ref_seq+"\n\n"
         elif format == "align":
             genomealign = {"chr": read.query_name, "start": query_start + 1, "stop": query_end, "targetseq": ref_seq, "queryseq": query_seq}
-            cols = '\t'.join(map(str, [read.reference_name, read.reference_start + 1, read.reference_end, "id:" + idx]))
+            cols = '\t'.join(map(str, [read.reference_name, read.reference_start + 1, read.reference_end, "id:" + str(idx)]))
             output = cols + ",genomealign:" + json.dump(genomealign) + "\n"
         else:
             sys.exit('outout format has to be axt or align.')
