@@ -39,11 +39,11 @@ def convertAxt(bam_file, fasta_file, out_file, format):
 def main():
     parser = argparse.ArgumentParser(description='simple arguments')
     parser.add_argument(
-        '--fasta',
-        '-f',
+        '--ref',
+        '-r',
         action="store",
-        dest="fasta",
-        help='The input fasta reference file.',
+        dest="ref",
+        help='The input reference fasta file.',
     )
     parser.add_argument(
         '--bam',
