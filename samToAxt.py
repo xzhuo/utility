@@ -63,7 +63,7 @@ def main():
         '--format',
         '-f',
         action="store",
-        dest="out",
+        dest="format",
         default="axt",
         help='The output file format, axt or align',
     )
