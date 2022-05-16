@@ -61,7 +61,7 @@ def main():
     )
     parser.add_argument(
         '--format',
-        '-o',
+        '-f',
         action="store",
         dest="out",
         default="axt",
