@@ -23,12 +23,12 @@ def convertAxt(bam_file, ref_file, out_file, format):
         strand = "-" if read.is_reverse else "+"
         query_seq = ''.join(["-" if pos[0] == None else read.query_sequence[pos[0]] for pos in pairs])
         ref_seq = ''.join(["-" if pos[1] == None else fasta.fetch(reference=read.reference_name, start=pos[1], end=pos[1]+1) for pos in pairs])
-        if format == "axt":
+        if format == "axt":  # axt file is 1 based.
             cols = ' '.join(map(str, [idx, read.reference_name, read.reference_start + 1, read.reference_end, read.query_name, query_start + 1, query_end, strand, "60"]))
             output = cols+"\n"+query_seq+"\n"+ref_seq+"\n\n"
-        elif format == "align":
-            genomealign = {"chr": read.query_name, "start": query_start + 1, "stop": query_end, "targetseq": ref_seq, "queryseq": query_seq}
-            cols = '\t'.join(map(str, [read.reference_name, read.reference_start + 1, read.reference_end, "id:" + str(idx)]))
+        elif format == "align":  # align file is 0 based. 
+            genomealign = {"chr": read.query_name, "start": query_start, "stop": query_end, "targetseq": ref_seq, "queryseq": query_seq}
+            cols = '\t'.join(map(str, [read.reference_name, read.reference_start, read.reference_end, "id:" + str(idx)]))
             output = cols + ",genomealign:" + json.dumps(genomealign) + "\n"
         else:
             sys.exit('outout format has to be axt or align.')
