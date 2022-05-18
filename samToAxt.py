@@ -27,7 +27,7 @@ def convertAxt(bam_file, ref_file, out_file, format):
             cols = ' '.join(map(str, [idx, read.reference_name, read.reference_start + 1, read.reference_end, read.query_name, query_start + 1, query_end, strand, "60"]))
             output = cols+"\n"+query_seq+"\n"+ref_seq+"\n\n"
         elif format == "align":  # align file is 0 based. 
-            genomealign = {"chr": read.query_name, "start": query_start, "stop": query_end, "targetseq": ref_seq, "queryseq": query_seq}
+            genomealign = {"chr": read.query_name, "start": query_start, "stop": query_end, "strand": strand, "targetseq": ref_seq, "queryseq": query_seq}
             cols = '\t'.join(map(str, [read.reference_name, read.reference_start, read.reference_end, "id:" + str(idx)]))
             output = cols + ",genomealign:" + json.dumps(genomealign) + "\n"
         else:
