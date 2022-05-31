@@ -25,10 +25,13 @@ def attach_tags(bam_file, tag_file, out_file):
                     if Mm[3]=="?":
                         Mm = Mm[:3]+Mm[4:]
                     hash[read.query_name] = {'Mm': Mm, 'Ml': Ml, 'seq': seq}
-                except:
+                except KeyError:
                     MM = read.get_tag("MM")
                     ML = read.get_tag("ML")
                     hash[read.query_name] = {'MM': MM, 'ML': ML, 'seq': seq}
+                except:
+                    pass
+
         tag_pysam.close()
 
     bam = pysam.AlignmentFile(bam_file, threads = 8)
