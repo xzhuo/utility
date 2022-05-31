@@ -26,9 +26,12 @@ def attach_tags(bam_file, tag_file, out_file):
                         Mm = Mm[:3]+Mm[4:]
                     hash[read.query_name] = {'Mm': Mm, 'Ml': Ml, 'seq': seq}
                 except KeyError:
-                    MM = read.get_tag("MM")
-                    ML = read.get_tag("ML")
-                    hash[read.query_name] = {'MM': MM, 'ML': ML, 'seq': seq}
+                    try:
+                        MM = read.get_tag("MM")
+                        ML = read.get_tag("ML")
+                        hash[read.query_name] = {'MM': MM, 'ML': ML, 'seq': seq}
+                    except KeyError:
+                        pass
                 except:
                     pass
 
@@ -48,39 +51,41 @@ def attach_tags(bam_file, tag_file, out_file):
             except:
                 Ml_array = copy(hash[query_name]['ML'])
             if not read.infer_query_length == read.infer_read_length:
-                cigar = read.cigartuples
-                clip_process = False
-                clip_length = 0
-                if (not read.is_reverse) and cigar[0][0] == 5:
-                    clip_length = cigar[0][1]
-                    clip_process = True
-                if read.is_reverse and cigar[-1][0] == 5:
-                    clip_length = cigar[-1][1]
-                    clip_process = True
+                # skip reads that are not full length (hard clipped).
+                pass
+                # cigar = read.cigartuples
+                # clip_process = False
+                # clip_length = 0
+                # if (not read.is_reverse) and cigar[0][0] == 5:
+                #     clip_length = cigar[0][1]
+                #     clip_process = True
+                # if read.is_reverse and cigar[-1][0] == 5:
+                #     clip_length = cigar[-1][1]
+                #     clip_process = True
 
-                if clip_process:
-                    clip_seq = hash[query_name]['seq'][:clip_length]
-                    numC = clip_seq.count('C') + clip_seq.count('c')
+                # if clip_process:
+                #     clip_seq = hash[query_name]['seq'][:clip_length]
+                #     numC = clip_seq.count('C') + clip_seq.count('c')
 
-                    Mm_string_tail = ""
-                    if Mm_string[-1:] == ";":
-                        Mm_string = Mm_string[:-1]
-                        Mm_string_tail = ";"
+                #     Mm_string_tail = ""
+                #     if Mm_string[-1:] == ";":
+                #         Mm_string = Mm_string[:-1]
+                #         Mm_string_tail = ";"
                     
-                    Mm_list = Mm_string.split(",")
-                    Mm_type = Mm_list.pop(0)
-                    Mm_list = list(map(int, Mm_list))
-                    while numC > 0 and len(Mm_list) > 0:
-                        if Mm_list[0]>=numC:
-                            Mm_list[0]-=numC
-                            numC = 0
-                        else:
-                            first = Mm_list.pop(0)
-                            numC -= first+1
-                            Ml_array.pop(0)
-                    Mm_list = list(map(str, Mm_list))
-                    Mm_list.insert(0, Mm_type)
-                    Mm_string = ','.join(Mm_list) + Mm_string_tail
+                #     Mm_list = Mm_string.split(",")
+                #     Mm_type = Mm_list.pop(0)
+                #     Mm_list = list(map(int, Mm_list))
+                #     while numC > 0 and len(Mm_list) > 0:
+                #         if Mm_list[0]>=numC:
+                #             Mm_list[0]-=numC
+                #             numC = 0
+                #         else:
+                #             first = Mm_list.pop(0)
+                #             numC -= first+1
+                #             Ml_array.pop(0)
+                #     Mm_list = list(map(str, Mm_list))
+                #     Mm_list.insert(0, Mm_type)
+                #     Mm_string = ','.join(Mm_list) + Mm_string_tail
 
             read.set_tag('Mm', Mm_string, 'Z')
             read.set_tag('Ml', Ml_array)
