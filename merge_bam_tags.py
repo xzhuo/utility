@@ -106,7 +106,7 @@ def main():
                         help='bam file with tags, or dir with these bam files')
     parser.add_argument('-o', '--out', type=str, required=True,
                         help='output bam file with Ml and Mm tags attached')
-    parser.add_argument('-a', '--all', type=bool, required=False, default=False, action='store_true',
+    parser.add_argument('-a', '--all', required=False, default=False, action='store_true',
                         help='Attach Ml and Mm tags to all reads, including hard-clipped reads')
     args = parser.parse_args()
     tag_file = os.path.abspath(args.tag)
