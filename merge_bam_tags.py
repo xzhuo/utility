@@ -1,6 +1,5 @@
 import os
 import argparse
-from xmlrpc.client import boolean
 import pysam
 from copy import copy
 
