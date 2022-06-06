@@ -8,53 +8,59 @@ def methylation_calculation(bam_file, out_file, len_filter):
     """
 
     bam = pysam.AlignmentFile(bam_file, threads = 8, check_sq=False)
-    out = pysam.AlignmentFile(out_file, "wb", template=bam, threads = 8)
-    for read in bam.fetch():
+    out = open(out_file, "w")
+    for read in bam.fetch(until_eof=True):
+        if read.is_supplementary or read.is_secondary or read.is_unmapped:
+            continue
         query_name = read.query_name
-        breakpoint()
-        if read.infer_query_length == read.infer_read_length:
-            read.set_tag('Mm', Mm_string, 'Z')
-            read.set_tag('Ml', Ml_array)
-        elif all_reads:
-            cigar = read.cigartuples
-            clip_process = False
-            clip_length = 0
-            if (not read.is_reverse) and cigar[0][0] == 5:
-                clip_length = cigar[0][1]
-                clip_process = True
-            if read.is_reverse and cigar[-1][0] == 5:
-                clip_length = cigar[-1][1]
-                clip_process = True
+        modbase_key = ('C', 1, 'm') if read.is_reverse else ('C', 0, 'm')
+        strand = '-' if read.is_reverse else '+'
+        try:
+            modbase_list = read.modified_bases[modbase_key] # a list of tuples
+            last_match = None
+            for i in read.get_aligned_pairs():
+                if i[0] is None:
+                    # deletion
+                    try:
+                        deletion_length +=1
+                    except UnboundLocalError:
+                        deletion_length = 1
+                elif i[1] is None:
+                    # insertion
+                    try:
+                        insertion_length +=1
+                    except UnboundLocalError:
+                        insertion_length = 1
+                else:
+                    # match
+                    if last_match is not None:
+                        if insertion_length > len_filter:
+                            ref = (i[1],i[1])
+                            query = (i[0] - insertion_length, i[0])
+                            [i for i in modbase_list if i[0] >= query[0] and i[0] <= query[1]]
+                            modbase_perc_list = [j[1]/255 for j in list(filter(lambda i: i[0] >= query[0] and i[0] < query[1], modbase_list))]
+                            if len(modbase_perc_list) > 0:
+                                modbase_perc = sum(modbase_perc_list)/len(modbase_perc_list)
+                            else:
+                                modbase_perc = -1
+                            out.write("{:s}\t{:d}\t{:d}\t{:s}\t{:d}\t{:d}\t{:s}\t{:.4f}\n".format(
+                                read.reference_name,
+                                ref[0],
+                                ref[1],
+                                query_name,
+                                query[0],
+                                query[1],
+                                strand,
+                                modbase_perc))
+                        elif deletion_length > len_filter:
+                            ref = (i[1] - deletion_length,i[1])
+                            query = (i[0], i[0])
 
-            if clip_process:
-                clip_seq = hash[query_name]['seq'][:clip_length]
-                numC = clip_seq.count('C') + clip_seq.count('c')
-
-                Mm_string_tail = ""
-                if Mm_string[-1:] == ";":
-                    Mm_string = Mm_string[:-1]
-                    Mm_string_tail = ";"
-                
-                Mm_list = Mm_string.split(",")
-                Mm_type = Mm_list.pop(0)
-                Mm_list = list(map(int, Mm_list))
-                while numC > 0 and len(Mm_list) > 0:
-                    if Mm_list[0]>=numC:
-                        Mm_list[0]-=numC
-                        numC = 0
-                    else:
-                        first = Mm_list.pop(0)
-                        numC -= first+1
-                        Ml_array.pop(0)
-                Mm_list = list(map(str, Mm_list))
-                Mm_list.insert(0, Mm_type)
-                Mm_string = ','.join(Mm_list) + Mm_string_tail
-            read.set_tag('Mm', Mm_string, 'Z')
-            read.set_tag('Ml', Ml_array)
-
-            read.set_tag('Mm', Mm_string, 'Z')
-            read.set_tag('Ml', Ml_array)
-        out.write(read)
+                    insertion_length = 0
+                    deletion_length = 0
+                    last_match = i
+        except:
+            pass
 
     out.close()
     bam.close()
