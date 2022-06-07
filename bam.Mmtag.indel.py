@@ -37,14 +37,16 @@ def methylation_calculation(bam_file, out_file, len_filter):
                         if insertion_length > len_filter:
                             ref = (i[1],i[1])
                             query = (i[0] - insertion_length, i[0])
-                            [i for i in modbase_list if i[0] >= query[0] and i[0] <= query[1]]
+                            modbase_pos_list = [j[0] - query[0] for j in list(filter(lambda i: i[0] >= query[0] and i[0] < query[1], modbase_list))]
                             modbase_perc_list = [j[1]/255 for j in list(filter(lambda i: i[0] >= query[0] and i[0] < query[1], modbase_list))]
+                            modbase_pos_string = ','.join(["%d" % i for i in modbase_pos_list])
                             modbase_string = ','.join(["%.2f" % i for i in modbase_perc_list])
+                            modbase_count = len(modbase_perc_list)
                             if len(modbase_perc_list) > 0:
                                 modbase_perc = sum(modbase_perc_list)/len(modbase_perc_list)
                             else:
                                 modbase_perc = -1
-                            out.write("{:s}\t{:d}\t{:d}\t{:s}\t{:d}\t{:d}\t{:d}\t{:s}\t{:.4f}\t{:s}\n".format(
+                            out.write("{:s}\t{:d}\t{:d}\t{:s}\t{:d}\t{:d}\t{:d}\t{:s}\t{:.4f}\t{:d}\t{:s}\t{:d}\n".format(
                                 read.reference_name,
                                 ref[0],
                                 ref[1],
@@ -54,7 +56,9 @@ def methylation_calculation(bam_file, out_file, len_filter):
                                 query[1]-query[0],
                                 strand,
                                 modbase_perc,
-                                modbase_string))
+                                modbase_count,
+                                modbase_string,
+                                modbase_pos_string))
                         elif deletion_length > len_filter:
                             ref = (i[1] - deletion_length,i[1])
                             query = (i[0], i[0])
@@ -82,7 +86,6 @@ def main():
     if not os.path.exists(bam_file):
         raise ValueError("--bam file does not exist!")
     
-    outfile = args.out
     methylation_calculation(bam_file, args.out, args.len)
 
 
