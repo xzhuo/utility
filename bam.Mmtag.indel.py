@@ -46,7 +46,7 @@ def methylation_calculation(bam_file, out_file, len_filter):
                                 modbase_perc = sum(modbase_perc_list)/len(modbase_perc_list)
                             else:
                                 modbase_perc = -1
-                            out.write("{:s}\t{:d}\t{:d}\t{:s}\t{:d}\t{:d}\t{:d}\t{:s}\t{:.4f}\t{:d}\t{:s}\t{:d}\n".format(
+                            out.write("{:s}\t{:d}\t{:d}\t{:s}\t{:d}\t{:d}\t{:d}\t{:s}\t{:.4f}\t{:d}\t{:s}\t{:s}\n".format(
                                 read.reference_name,
                                 ref[0],
                                 ref[1],
