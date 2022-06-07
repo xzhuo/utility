@@ -39,7 +39,7 @@ def methylation_calculation(bam_file, out_file, len_filter):
                             query = (i[0] - insertion_length, i[0])
                             [i for i in modbase_list if i[0] >= query[0] and i[0] <= query[1]]
                             modbase_perc_list = [j[1]/255 for j in list(filter(lambda i: i[0] >= query[0] and i[0] < query[1], modbase_list))]
-                            modbase_string = ','.join(map(str, modbase_perc_list))
+                            modbase_string = ','.join(["%.2f" % i for i in modbase_perc_list])
                             if len(modbase_perc_list) > 0:
                                 modbase_perc = sum(modbase_perc_list)/len(modbase_perc_list)
                             else:
