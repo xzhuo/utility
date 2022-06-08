@@ -1,6 +1,7 @@
 import os
 import argparse
 import pysam
+import time
 
 def methylation_calculation(bam_file, out_file, len_filter):
     """
@@ -8,7 +9,7 @@ def methylation_calculation(bam_file, out_file, len_filter):
     """
 
     bam = pysam.AlignmentFile(bam_file, threads = 8, check_sq=False)
-    out = open(out_file, "w")
+    out_list = []
     for read in bam.fetch(until_eof=True):
         if read.is_supplementary or read.is_secondary or read.is_unmapped:
             continue
@@ -46,19 +47,8 @@ def methylation_calculation(bam_file, out_file, len_filter):
                                 modbase_perc = sum(modbase_perc_list)/len(modbase_perc_list)
                             else:
                                 modbase_perc = -1
-                            out.write("{:s}\t{:d}\t{:d}\t{:s}\t{:d}\t{:d}\t{:d}\t{:s}\t{:.4f}\t{:d}\t{:s}\t{:s}\n".format(
-                                read.reference_name,
-                                ref[0],
-                                ref[1],
-                                query_name,
-                                query[0],
-                                query[1],
-                                query[1]-query[0],
-                                strand,
-                                modbase_perc,
-                                modbase_count,
-                                modbase_string,
-                                modbase_pos_string))
+                            out_list.append([read.reference_name, ref[0], ref[1], query_name, query[0], query[1], query[1]-query[0], strand, modbase_perc, modbase_count, modbase_string, modbase_pos_string])
+
                         elif deletion_length > len_filter:
                             ref = (i[1] - deletion_length,i[1])
                             query = (i[0], i[0])
@@ -69,8 +59,22 @@ def methylation_calculation(bam_file, out_file, len_filter):
         except:
             pass
 
-    out.close()
     bam.close()
+    with open(out_file, "w") as out:
+        for line in out_list:
+            out.write("{:s}\t{:d}\t{:d}\t{:s}\t{:d}\t{:d}\t{:d}\t{:s}\t{:.4f}\t{:d}\t{:s}\t{:s}\n".format(
+                line[0],
+                line[1],
+                line[2],
+                line[3],
+                line[4],
+                line[5],
+                line[6],
+                line[7],
+                line[8],
+                line[9],
+                line[10],
+                line[11]))
 
 def main():
     parser = argparse.ArgumentParser(description='calculate CpG methylation average of inserted regions in the bam file')
@@ -85,8 +89,10 @@ def main():
     bam_file = os.path.abspath(args.bam)
     if not os.path.exists(bam_file):
         raise ValueError("--bam file does not exist!")
-    
+    start_time = time.time()
     methylation_calculation(bam_file, args.out, args.len)
+    end_time = time.time()
+    print("--- %s seconds ---" % (end_time - start_time))
 
 
 if __name__ == '__main__':
