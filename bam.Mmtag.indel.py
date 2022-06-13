@@ -38,6 +38,7 @@ def methylation_calculation(bam_file, out_file, len_filter):
                         if insertion_length > len_filter:
                             ref = (i[1],i[1])
                             query = (i[0] - insertion_length, i[0])
+                            query_seq = read.query_sequence[query[0]:query[1]]
                             modbase_pos_list = [j[0] - query[0] for j in list(filter(lambda i: i[0] >= query[0] and i[0] < query[1], modbase_list))]
                             modbase_perc_list = [j[1]/255 for j in list(filter(lambda i: i[0] >= query[0] and i[0] < query[1], modbase_list))]
                             modbase_pos_string = ','.join(["%d" % i for i in modbase_pos_list])
@@ -47,7 +48,7 @@ def methylation_calculation(bam_file, out_file, len_filter):
                                 modbase_perc = sum(modbase_perc_list)/len(modbase_perc_list)
                             else:
                                 modbase_perc = -1
-                            out_list.append([read.reference_name, ref[0], ref[1], query_name, query[0], query[1], query[1]-query[0], strand, modbase_perc, modbase_count, modbase_string, modbase_pos_string])
+                            out_list.append([read.reference_name, ref[0], ref[1], query_name, query[0], query[1], query[1]-query[0], strand, modbase_perc, modbase_count, modbase_string, modbase_pos_string, query_seq])
 
                         elif deletion_length > len_filter:
                             ref = (i[1] - deletion_length,i[1])
@@ -62,7 +63,7 @@ def methylation_calculation(bam_file, out_file, len_filter):
     bam.close()
     with open(out_file, "w") as out:
         for line in out_list:
-            out.write("{:s}\t{:d}\t{:d}\t{:s}\t{:d}\t{:d}\t{:d}\t{:s}\t{:.4f}\t{:d}\t{:s}\t{:s}\n".format(
+            out.write("{:s}\t{:d}\t{:d}\t{:s}\t{:d}\t{:d}\t{:d}\t{:s}\t{:.4f}\t{:d}\t{:s}\t{:s}\t{:s}\n".format(
                 line[0],
                 line[1],
                 line[2],
@@ -74,7 +75,8 @@ def methylation_calculation(bam_file, out_file, len_filter):
                 line[8],
                 line[9],
                 line[10],
-                line[11]))
+                line[11],
+                line[12]))
 
 def main():
     parser = argparse.ArgumentParser(description='calculate CpG methylation average of inserted regions in the bam file')
