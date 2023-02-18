@@ -1,0 +1,8 @@
+FROM conda/miniconda3
+
+RUN conda config --add channels bioconda \
+    && conda config --add channels conda-forge \
+    && conda install -y bwa samtools pysam sortedcontainers minimap2 wtdbg
+
+RUN pip install numpy
+# RUN pip install deep-forest
