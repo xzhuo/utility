@@ -1,0 +1,6 @@
+FROM conda/miniconda3
+
+RUN conda config --add channels bioconda \
+    && conda config --add channels conda-forge \
+    && conda install -y htslib samtools bcftools bedtools bamtools minimap2 pbccs pbmm2 pbbam extracthifi primrose rustybam
+
