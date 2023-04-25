@@ -1,4 +1,4 @@
-FROM snakemake/snakemake
+FROM conda/miniconda3
 
 RUN conda config --add channels bioconda \
     && conda config --add channels conda-forge \
@@ -6,4 +6,4 @@ RUN conda config --add channels bioconda \
 
 RUN wget https://github.com/PacificBiosciences/pb-CpG-tools/releases/download/v2.2.0/pb-CpG-tools-v2.2.0-x86_64-unknown-linux-gnu.tar.gz
 RUN tar -xzf pb-CpG-tools-v2.2.0-x86_64-unknown-linux-gnu.tar.gz
-ENV PATH="$PATH:/tmp/repo/pb-CpG-tools-v2.2.0-x86_64-unknown-linux-gnu/bin"
+ENV PATH="$PATH:/pb-CpG-tools-v2.2.0-x86_64-unknown-linux-gnu/bin"
