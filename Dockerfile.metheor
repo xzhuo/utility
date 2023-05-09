@@ -1,4 +1,4 @@
 FROM conda/miniconda3
 
-RUN conda config --add channels dohlee \
-    && conda install -y metheor
+RUN conda config --add channels conda-forge \
+    && conda install -y -c dohlee metheor=0.1.6
