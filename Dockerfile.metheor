@@ -1,0 +1,4 @@
+FROM conda/miniconda3
+
+RUN conda config --add channels dohlee \
+    && conda install -y metheor
