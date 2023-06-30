@@ -1,5 +1,3 @@
 FROM conda/miniconda3
 
-RUN conda config --add channels bioconda \
-    && conda config --add channels conda-forge \
-    && conda install -c bioconda rmetl
+RUN conda install -y -c bioconda python=2.7 rmetl
