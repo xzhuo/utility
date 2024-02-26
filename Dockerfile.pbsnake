@@ -2,7 +2,7 @@ FROM snakemake/snakemake
 
 RUN conda config --add channels bioconda \
     && conda config --add channels conda-forge \
-    && conda install -y wget htslib samtools bedtools minimap2 pbccs pbmm2 pbbam pbtk pbjasmine r-ggally r-rcolorbrewer r-dplyr r-Metrics
+    && conda install -y wget htslib samtools bedtools minimap2 pbccs pbmm2 pbbam pbtk pbjasmine hiphase r-ggally r-rcolorbrewer r-dplyr r-Metrics
 
 WORKDIR /opt/conda
 RUN wget https://github.com/PacificBiosciences/pb-CpG-tools/releases/download/v2.3.2/pb-CpG-tools-v2.3.2-x86_64-unknown-linux-gnu.tar.gz
