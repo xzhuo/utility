@@ -1,8 +1,14 @@
-FROM ubuntu
-ENV DEBIAN_FRONTEND=noninteractive
+# FROM ubuntu
+# ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update \
-    && apt-get install -y wget r-base r-cran-ggplot2 \
-    && apt-get clean
+# RUN apt-get update \
+#     && apt-get install -y wget r-base r-cran-ggplot2 \
+#     && apt-get clean
 
-RUN Rscript -e 'install.packages(c("ggplot2", "GGally","RColorBrewer","dplyr"))'
+# RUN Rscript -e 'install.packages(c("ggplot2", "GGally","RColorBrewer","dplyr"))'
+
+FROM condaforge/miniforge3
+
+RUN conda config --add channels bioconda \
+    && conda config --add channels conda-forge \
+    && mamba install -y r-base r-ggbiplot r-dplyr r-ggplot2 r-tidyverse r-rcolorbrewer r-ggally r-ggrepel r-ggpubr r-ggthemes r-ggvis r-ggfortify
