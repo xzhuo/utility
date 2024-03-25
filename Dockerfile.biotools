@@ -1,7 +1,9 @@
-FROM conda/miniconda3
+# FROM conda/miniconda3
+FROM condaforge/miniforge3
 
 RUN conda config --add channels bioconda \
-    && conda config --add channels conda-forge \
-    && conda install -y htslib samtools bcftools bedtools bamtools minimap2 last
+    # && conda config --add channels conda-forge \
+    && mamba install -y make htslib samtools bcftools bedtools bamtools minimap2 last
     # rustybam
 
+RUN pip install modbedtools
