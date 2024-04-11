@@ -12,3 +12,5 @@ FROM condaforge/miniforge3
 RUN conda config --add channels bioconda \
     && conda config --add channels conda-forge \
     && mamba install -y r-base r-ggbiplot r-dplyr r-ggplot2 r-tidyverse r-metrics r-rcolorbrewer r-ggally r-ggrepel r-ggpubr r-ggthemes r-ggvis r-ggfortify r-rsqlite
+
+RUN R -e "install.packages('inborutils', repos = c(inbo = 'https://inbo.r-universe.dev',CRAN = 'https://cloud.r-project.org'))"
