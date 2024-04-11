@@ -11,4 +11,4 @@ FROM condaforge/miniforge3
 
 RUN conda config --add channels bioconda \
     && conda config --add channels conda-forge \
-    && mamba install -y r-base r-ggbiplot r-dplyr r-ggplot2 r-tidyverse r-metrics r-rcolorbrewer r-ggally r-ggrepel r-ggpubr r-ggthemes r-ggvis r-ggfortify
+    && mamba install -y r-base r-ggbiplot r-dplyr r-ggplot2 r-tidyverse r-metrics r-rcolorbrewer r-ggally r-ggrepel r-ggpubr r-ggthemes r-ggvis r-ggfortify r-rsqlite
