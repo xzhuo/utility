@@ -1,0 +1,16 @@
+# FROM conda/miniconda3
+FROM gcc
+
+RUN apt-get install git
+
+# install bedtools 2.31.0
+RUN wget https://github.com/arq5x/bedtools2/releases/download/v2.31.0/bedtools.static \
+    &&  mv bedtools.static bedtools && chmod a+x bedtools && mv bedtools /usr/local/bin
+
+# install stochHMM
+RUN git clone https://github.com/KorfLab/StochHMM.git
+RUN cd StochHMM && ./configure && make && make install
+
+# finally, install skewR
+WORKDIR /
+RUN git clone https://github.com/srhartono/SkewR
