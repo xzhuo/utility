@@ -17,4 +17,4 @@ RUN rm modkit_v0.4.1_u16_x86_64.tar.gz
 ENV PATH="$PATH:/modkit:/dorado/bin"
 
 # ONT base calling and methylation processing tools.
-# Tools installed: pod5, samtools, bedtools, dorado=0.8.1, modkit=0.4.1
+# Tools installed: pod5=0.3.15, samtools, bedtools, dorado=0.8.1, modkit=0.4.1
