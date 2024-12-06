@@ -1,0 +1,14 @@
+FROM condaforge/miniforge3
+RUN conda config --add channels bioconda \
+    && conda config --add channels conda-forge \
+    && mamba install -y wget git
+
+RUN git clone https://github.com/adamewing/tldr.git
+WORKDIR /tldr
+RUN conda env create -f tldr.yml
+# RUN conda init && conda activate tldr
+# RUN pip install -e /tldr
+
+RUN echo "source activate tldr" > ~/.bashrc
+ENV PATH /opt/conda/envs/tldr/bin:$PATH
+RUN pip install -e /tldr
