@@ -1,0 +1,9 @@
+FROM condaforge/miniforge3
+
+RUN conda config --add channels bioconda \
+    && conda config --add channels conda-forge \
+    && mamba install -y wget git gcc
+
+RUN pip install ncls
+
+RUN git clone https://github.com/Scott-Devine/MELT-LRA.git
