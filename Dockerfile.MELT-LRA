@@ -2,7 +2,7 @@ FROM condaforge/miniforge3
 
 RUN conda config --add channels bioconda \
     && conda config --add channels conda-forge \
-    && mamba install -y wget git gcc
+    && mamba install -y wget git gcc emboss
 
 RUN pip install ncls
 

@@ -1,0 +1,12 @@
+FROM conda/miniconda3
+
+RUN conda config --add channels bioconda \
+    && conda install python==3.6.3
+
+RUN pip install tensorflow==1.10.0 deepcpg
+RUN pip install keras==2.2.0
+# RUN pip uninstall h5py
+RUN pip uninstall -y h5py
+RUN pip install h5py==2.10.0
+WORKDIR /usr/local/bin
+RUN ls dcpg_*py|xargs sed -i '1 c\#!/usr/local/bin/python'
