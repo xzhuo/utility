@@ -3,7 +3,8 @@ RUN conda config --add channels bioconda \
     && conda config --add channels conda-forge \
     && mamba install -y wget git anaconda::make gxx samtools bioconda::blast
 
-RUN git clone https://github.com/mills-lab/PALMER.git
+# RUN git clone https://github.com/mills-lab/PALMER.git
+RUN git clone https://github.com/xzhuo/PALMER.git
 
 WORKDIR /PALMER
 RUN make
