@@ -6,8 +6,26 @@ RUN apt-get install python3-pip git -y
 
 RUN pip install matplotlib pandas pysam tqdm bio more_itertools --break-system-packages
 
+# delete the minimal dfam database
+RUN rm /opt/RepeatMasker/Libraries/famdb/*
+
+# Install full dfam3.8 database
+# No, don't do this. It will be too big. Try to mount a local directory instead.
+# RUN wget https://www.dfam.org/releases/Dfam_3.8/families/FamDB/dfam38-1_full.0.h5.gz
+# RUN wget https://www.dfam.org/releases/Dfam_3.8/families/FamDB/dfam38-1_full.1.h5.gz
+# RUN wget https://www.dfam.org/releases/Dfam_3.8/families/FamDB/dfam38-1_full.2.h5.gz
+# RUN wget https://www.dfam.org/releases/Dfam_3.8/families/FamDB/dfam38-1_full.3.h5.gz
+# RUN wget https://www.dfam.org/releases/Dfam_3.8/families/FamDB/dfam38-1_full.4.h5.gz
+# RUN wget https://www.dfam.org/releases/Dfam_3.8/families/FamDB/dfam38-1_full.5.h5.gz
+# RUN wget https://www.dfam.org/releases/Dfam_3.8/families/FamDB/dfam38-1_full.6.h5.gz
+# RUN wget https://www.dfam.org/releases/Dfam_3.8/families/FamDB/dfam38-1_full.7.h5.gz
+# RUN wget https://www.dfam.org/releases/Dfam_3.8/families/FamDB/dfam38-1_full.8.h5.gz
+# RUN /opt/RepeatMasker/tetoolsDfamUpdate.pl
+
+# Install L1ME-AID
 # https://stackoverflow.com/questions/36996046/how-to-prevent-dockerfile-caching-git-clone
 # --build-arg CACHEBUST=$(date +%s)
+WORKDIR /opt/src
 ARG CACHEBUST=1
 RUN git clone https://github.com/Markloftus/L1ME-AID.git
 ENV PATH="/opt/src/L1ME-AID:${PATH}"
