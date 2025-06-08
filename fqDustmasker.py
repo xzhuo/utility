@@ -32,7 +32,9 @@ def run_fq_dustmasker(fq_ary_1, fq_ary_2):
     filtered_fq_2 = []
 
     for (header1, seq1, _, qual1), (header2, seq2, _, qual2) in zip(fq_ary_1, fq_ary_2):
-        if header1 != header2:
+        (id1, _, _) = header1.split()
+        (id2, _, _) = header2.split()
+        if id1 != id2:
             raise ValueError("Unmatched headers in the fastq files: {} vs {}".format(header1, header2))
     
         masker1 = pydustmasker.DustMasker(seq1)
