@@ -1,4 +1,4 @@
-FROM dfam/tetools
+FROM dfam/tetools:1.92
 
 RUN apt-get update
 RUN apt-get upgrade -y
