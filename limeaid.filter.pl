@@ -132,7 +132,7 @@ while (<IN>) {
 	} elsif ($F[8] eq "Retroposon/SVA") {
 		$pass = filter_sva(@F);
 	}
-    print join("\t", @F) if $pass;
+    print join("\t", @F)."\n" if $pass;
 }
 close IN;
 # print all.
