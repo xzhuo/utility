@@ -16,15 +16,15 @@ sub process_rmsk {
 		my $start=$strand eq "+"?$tmp[11]:$tmp[13]; 
 		my $end = $tmp[12];
 		my $left=$strand eq "+"?$tmp[13]:$tmp[11]; 
-		my $left=~s/\((.*)\)/$1/;
+		my $left=substr($left,1,-1);
 		my $sv_length = $tmp[6] -$tmp[5]+1;
 		my $te_length=$end-$start+1;
-		my $te_total=$tmp[12]+$1;
+		my $te_total=$tmp[12]+$left;
 		$hash{$te}{"class"}=$class;
 		$hash{$te}{"te_length"}+=$te_length;
 		$hash{$te}{"sv_length"}+=$sv_length;
 		$hash{$te}{"frac"}+= $te_length/$te_total;
-		$hash{$te}{"left"}=$1 if (not exists $hash{$te}{"left"}) || $1 < $hash{$te}{"left"}; 
+		$hash{$te}{"left"}=$left if (not exists $hash{$te}{"left"}) || $left < $hash{$te}{"left"}; 
 		$hash{$te}{"start"}=$start if (not exists $hash{$te}{"start"}) || $start < $hash{$te}{"start"}; 
 		$hash{$te}{"end"}=$end if (not exists $hash{$te}{"end"}) || $end > $hash{$te}{"end"};
 	};
@@ -36,12 +36,14 @@ sub filter_ltr {
 =begin
 Return pass the filter or not, and the provirus type. 
 > 80% of SV is LTR;
+> 80% to 120% of LTR is in the SV (soloLTR);
+> 80% to 120% of LTR and 80% to 120% of int is in the SV (ERV-LTR);
+> 160% to 240% of LTR and 80% to 120% of int is in the SV (LTR-ERV-LTR).
 Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 =cut
 
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
-	# my $tes_proportion_ref = decode_json $F[6];
 	my $total_length; # total length of TEs matching column 9.
 	my $ltr_frac;
 	my $int_frac;
@@ -49,69 +51,75 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 	for my $te(keys %$hashref){
 		if ($hashref->{$te}->{"class"} eq $F[8]){
 			$total_length += $hashref->{$te}->{"sv_length"};
-			if ($hashref->{$te} =~ /-int$/) {
+			if ($te =~ /-int$/) {
 				$int_frac += $hashref->{$te}->{"frac"}
 			}
 			else {$ltr_frac += $hashref->{$te}->{"frac"}};
 		}
 	}
-	my $pass = $total_length / $F[3] > 0.8;
-    my $provirus = $F[4];
-    if ($F[4] !~ /-int$/) {
-        $provirus .= "-LTR" if $ltr_frac > 0.8 && $ltr_frac < 1.2 && $int_frac > 0.8 && $int_frac < 1.2;
-        $provirus = "LTR-$provirus-LTR" if $ltr_frac > 1.6 && $ltr_frac < 2.4 && $int_frac > 0.8 && $int_frac < 1.2;
-    }
+	my $pass = 0;
+	my $provirus = $F[4];
+
+	if ($F[4] =~ /-int$/) {
+		if ($ltr_frac > 0.8 && $ltr_frac < 1.2 && $int_frac > 0.8 && $int_frac < 1.2) {
+			$provirus .= "-LTR";
+			$pass = $total_length / $F[3] > 0.8;
+		} elsif ($ltr_frac > 1.6 && $ltr_frac < 2.4 && $int_frac > 0.8 && $int_frac < 1.2) {
+			$provirus = "LTR-$provirus-LTR";
+			$pass = $total_length / $F[3] > 0.8;
+		}
+	} elsif ($ltr_frac > 0.8 && $ltr_frac < 1.2) {
+			$pass = $total_length / $F[3] > 0.8;
+	}
+
 	return ($pass, $provirus);
 }
 
 
-sub filter_alu { # >80% of SV is Alu, and > 80% of Alu is in the SV.
+sub filter_alu { # >80% of SV is Alu, and 80% to 120% of Alu is in the SV.
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
-	# my $tes_proportion_ref = decode_json $F[6];
 	my $total_length; # total length of TEs matching column 5.
-    my $frac;
+	my $frac;
 	for my $te(keys %$hashref){
-		if ($hashref->{$te} eq $F[4]){
+		if ($te eq $F[4]){
 			$total_length += $hashref->{$te}->{"sv_length"};
 			$frac += $hashref->{$te}->{"frac"};
 		}
 	}
-    my $pass = $total_length / $F[3] > 0.8 && $frac > 0.8 && $frac < 1.2;
+	my $pass = $total_length / $F[3] > 0.8 && $frac > 0.8 && $frac < 1.2;
 	return $pass;
 }
 
-sub filter_l1 { # >80% of SV is L1, and 3'end is intach (repleft<50).
+sub filter_l1 { # >80% of SV is L1, and 3'end is intach (repleft < 50).
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
-	# my $tes_proportion_ref = decode_json $F[6];
 	my $total_length; # total length of TEs matching column 5.
-    my $frac;
-    my $repleft;
+	my $frac;
+	my $repleft;
 	for my $te(keys %$hashref){
-		if ($hashref->{$te} eq $F[4]){
+		if ($te eq $F[4]){
 			$total_length += $hashref->{$te}->{"sv_length"};
 			$repleft += $hashref->{$te}->{"left"};
 		}
 	}
-    my $pass = $total_length / $F[3] > 0.8 && $repleft < 50;
+	my $pass = $total_length / $F[3] > 0.8 && $repleft < 50;
 	return $pass;
 }
 
-sub filter_sva { # >80% of SV is SVA, and 3'end is intach (repleft<50). The upper limit is not applied here.
+sub filter_sva { # >80% of SV is SVA, and 3'end is intach (repleft < 50). The upper limit is not applied here.
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
-	# my $tes_proportion_ref = decode_json $F[6];
 	my $total_length; # total length of TEs matching column 9.
-    my $frac;
-    my $repleft;
-    for my $te(keys %$hashref){
+	my $frac;
+	my $repleft;
+	for my $te(keys %$hashref){
 		if ($hashref->{$te}->{"class"} eq $F[8]){
 			$total_length += $hashref->{$te}->{"sv_length"};
 			$repleft += $hashref->{$te}->{"left"};
 		}
 	}
-    my $pass = $total_length / $F[3] > 0.8 && $repleft < 50;
+	my $pass = $total_length / $F[3] > 0.8 && $repleft < 50;
 	return $pass;
 }
 
@@ -122,7 +130,7 @@ while (<IN>) {
 	my @F= split "\t", $_;
 	next if $. ==1;
 	next if $F[8] eq "";
-    my $pass;
+	my $pass;
 	if ($F[8] =~ /^LTR/) {
 		($pass, $F[4]) = filter_ltr(@F); # modify F[4] if necessary
 	} elsif ($F[8] eq "LINE/L1") { # this filter is human specific
@@ -132,19 +140,7 @@ while (<IN>) {
 	} elsif ($F[8] eq "Retroposon/SVA") {
 		$pass = filter_sva(@F);
 	}
-    print join("\t", @F)."\n" if $pass;
+	print join("\t", @F)."\n" if $pass;
 }
 close IN;
-# print all.
 
-
-
-# my %hash;
-
-
-
-# $str = encode_json \%hash;
-# %lookup = map {(uc $_, $hash{$_})} keys %hash;
-# $perc=$lookup{uc($F[4])}{"perc"};$start=$lookup{uc($F[4])}{"start"}; 
-# $end=$lookup{uc($F[4])}{"end"};$left=$lookup{uc($F[4])}{"left"};
-# print "$_\t$str\t$perc\t$start\t$end\t$left"}
