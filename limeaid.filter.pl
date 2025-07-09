@@ -1,5 +1,5 @@
 use strict;
-use JSON;
+# use JSON # for debugging, not used in the final version.;
 
 # header:
 # ID	Sequence	Element_Hits	Sequence_Length	Element_Annotation	Element_Divergence	Element_Proportion	Element_Percentage	Element_Designation	Orientation	FILTER_RESULTS	Tail_Begins	Tail_Type	Tail_Length	Tail_Seed_Hits	Unique_Element_Count	Twin_Priming_Flag
@@ -76,7 +76,7 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 }
 
 
-sub filter_alu { # >80% of SV is Alu, and 80% to 120% of Alu is in the SV.
+sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV.
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
 	my $total_length; # total length of TEs matching column 5.
@@ -87,11 +87,11 @@ sub filter_alu { # >80% of SV is Alu, and 80% to 120% of Alu is in the SV.
 			$frac += $hashref->{$te}->{"frac"};
 		}
 	}
-	my $pass = $total_length / $F[3] > 0.8 && $frac > 0.8 && $frac < 1.2;
+	my $pass = $total_length / $F[3] > 0.7 && $frac > 0.8 && $frac < 1.2;
 	return $pass;
 }
 
-sub filter_l1 { # >80% of SV is L1, and 3'end is intach (repleft < 50).
+sub filter_l1 { # >70% of SV is L1, and 3'end is intach (repleft < 50).
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
 	my $total_length; # total length of TEs matching column 5.
@@ -103,11 +103,11 @@ sub filter_l1 { # >80% of SV is L1, and 3'end is intach (repleft < 50).
 			$repleft += $hashref->{$te}->{"left"};
 		}
 	}
-	my $pass = $total_length / $F[3] > 0.8 && $repleft < 50;
+	my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
 	return $pass;
 }
 
-sub filter_sva { # >80% of SV is SVA, and 3'end is intach (repleft < 50). The upper limit is not applied here.
+sub filter_sva { # >70% of SV is SVA, and 3'end is intach (repleft < 50). The upper limit is not applied here.
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
 	my $total_length; # total length of TEs matching column 9.
@@ -119,7 +119,7 @@ sub filter_sva { # >80% of SV is SVA, and 3'end is intach (repleft < 50). The up
 			$repleft += $hashref->{$te}->{"left"};
 		}
 	}
-	my $pass = $total_length / $F[3] > 0.8 && $repleft < 50;
+	my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
 	return $pass;
 }
 
