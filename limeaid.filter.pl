@@ -91,7 +91,7 @@ sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV.
 	return $pass;
 }
 
-sub filter_l1 { # >70% of SV is L1, and 3'end is intach (repleft < 50).
+sub filter_l1 { # >70% of SV is L1, and 3'end is intact (repleft < 50).
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
 	my $total_length; # total length of TEs matching column 5.
@@ -107,7 +107,7 @@ sub filter_l1 { # >70% of SV is L1, and 3'end is intach (repleft < 50).
 	return $pass;
 }
 
-sub filter_sva { # >70% of SV is SVA, and 3'end is intach (repleft < 50). The upper limit is not applied here.
+sub filter_sva { # >70% of SV is SVA, and 3'end is intact (repleft < 50). The upper limit is not applied here.
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
 	my $total_length; # total length of TEs matching column 9.
