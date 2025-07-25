@@ -23,15 +23,16 @@ def extract_softclip(bam_file, out, failed, extend):
                                 adj_offset = i
                                 break
                         soft_clip = forward_sequence[adj_offset:]
+                        sa = read.get_tag('SA') if read.has_tag('SA') else None
                         # breakpoint()
                         pattern = re.compile('TGAAA'[:len(soft_clip)]) if len(soft_clip) < 5 else re.compile('TGAAA.*')
                         match = pattern.search(str(soft_clip))
                         if match:
-                            outfile.write(f">{read.query_name}_clip\n{match.group(0)}\n")
+                            outfile.write(f">{read.query_name}_clip\t# {sa}\n{match.group(0)}\n")
                         else:
                             # If no match, write the clipped sequence
                             soft_clip = forward_sequence[offset:]
-                            failed_outfile.write(f">{read.query_name}_clip\n{soft_clip}\n")
+                            failed_outfile.write(f">{read.query_name}_clip\t# {sa}\n{soft_clip}\n")
 
                 # breakpoint()
 
