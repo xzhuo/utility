@@ -2,29 +2,7 @@ import os
 import argparse
 import pysam
 import re
-from Bio.Seq import Seq
-
-def match_end(position, read_name, seq, outfile, failed_outfile, extend):
-    """
-    From the extended index looking upstream, print the first T found.
-    """
-    clean_seq = seq
-    for i in range(extend, -1, -1):
-        if seq[i] == 'T':
-            clean_seq = seq[i:]
-            break
-    match = None
-    if len(clean_seq) < 5:
-        pattern = re.compile('TGAAA'[:len(clean_seq)])
-        match = pattern.match(str(clean_seq))
-    else:
-        match = re.search('TGAAA.*', str(clean_seq))
-    if match:
-        outfile.write(f">{read_name}_{position}\n{match.group(0)}\n")
-    else:
-        # If no match, write the extended sequence
-        soft_clip = seq[extend:]
-        failed_outfile.write(f">{read_name}_{position}\n{soft_clip}\n")
+# from Bio.Seq import Seq
 
 
 def extract_softclip(bam_file, out, failed, extend):
@@ -36,13 +14,25 @@ def extract_softclip(bam_file, out, failed, extend):
                 if read.is_supplementary or read.is_secondary or read.is_unmapped:
                     continue
                 else:
-                    if read.query_alignment_start > 0:
-                        soft_left = read.query_sequence[:read.query_alignment_start + extend]
-                        revcom_left = Seq(soft_left).reverse_complement()
-                        match_end("left", read.query_name, revcom_left, outfile, failed_outfile, extend)
-                    if read.query_alignment_end < read.query_length:
-                        soft_right = read.query_sequence[read.query_alignment_end - extend:]
-                        match_end("right", read.query_name, soft_right, outfile, failed_outfile, extend)
+                    if (read.is_reverse and read.query_alignment_start > 0) or (read.is_forward and read.query_alignment_end < read.query_length):
+                        offset = read.query_length - read.query_alignment_start if read.is_reverse else read.query_alignment_end
+                        forward_sequence = read.get_forward_sequence()
+                        adj_offset = offset
+                        for i in range(offset, offset - extend, -1):
+                            if forward_sequence[i] == 'T':
+                                adj_offset = i
+                                break
+                        soft_clip = forward_sequence[adj_offset:]
+                        # breakpoint()
+                        pattern = re.compile('TGAAA'[:len(soft_clip)]) if len(soft_clip) < 5 else re.compile('TGAAA.*')
+                        match = pattern.search(str(soft_clip))
+                        if match:
+                            outfile.write(f">{read.query_name}_clip\n{match.group(0)}\n")
+                        else:
+                            # If no match, write the clipped sequence
+                            soft_clip = forward_sequence[offset:]
+                            failed_outfile.write(f">{read.query_name}_clip\n{soft_clip}\n")
+
                 # breakpoint()
 
 
