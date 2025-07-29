@@ -100,7 +100,7 @@ sub filter_l1 { # >70% of SV is L1, and 3'end is intact (repleft < 50).
 	for my $te(keys %$hashref){
 		if ($te eq $F[4]){
 			$total_length += $hashref->{$te}->{"sv_length"};
-			$repleft += $hashref->{$te}->{"left"};
+			$repleft = (defined $repleft && $repleft < $hashref->{$te}->{"left"}) ? $repleft : $hashref->{$te}->{"left"};
 		}
 	}
 	my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
@@ -117,6 +117,7 @@ sub filter_sva { # >70% of SV is SVA, and 3'end is intact (repleft < 50). The up
 		if ($hashref->{$te}->{"class"} eq $F[8]){
 			$total_length += $hashref->{$te}->{"sv_length"};
 			$repleft += $hashref->{$te}->{"left"};
+			$repleft = (defined $repleft && $repleft < $hashref->{$te}->{"left"}) ? $repleft : $hashref->{$te}->{"left"};
 		}
 	}
 	my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
