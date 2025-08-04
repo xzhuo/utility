@@ -121,7 +121,7 @@ sub filter_sva { # >70% of SV is SVA, and 3'end is intact (repleft < 50). The up
 	for my $te(keys %$hashref){
 		if ($hashref->{$te}->{"class"} eq $F[8]){
 			$total_length += $hashref->{$te}->{"sv_length"};
-			$repleft += $hashref->{$te}->{"left"};
+			# $repleft += $hashref->{$te}->{"left"};
 			$repleft = (defined $repleft && $repleft < $hashref->{$te}->{"left"}) ? $repleft : $hashref->{$te}->{"left"};
 		}
 	}
