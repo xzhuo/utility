@@ -47,6 +47,10 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 	my $total_length; # total length of TEs matching column 9.
 	my $ltr_frac;
 	my $int_frac;
+	my $ltr_start;
+	my $int_start;
+	my $ltr_left;
+	my $int_left;
 
 	for my $te(keys %$hashref){
 		if ($hashref->{$te}->{"class"} eq $F[8]){
@@ -86,13 +90,17 @@ sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV, repst
 	my $hashref = process_rmsk($F[2]);
 	my $total_length; # total length of TEs matching column 5.
 	my $frac;
+	my $repstart;
+	my $repleft;
 	for my $te(keys %$hashref){
 		if ($te eq $F[4]){
 			$total_length += $hashref->{$te}->{"sv_length"};
 			$frac += $hashref->{$te}->{"frac"};
+			$repstart = $hashref->{$te}->{"start"};
+			$repleft = $hashref->{$te}->{"left"};
 		}
 	}
-	my $pass = $total_length / $F[3] > 0.7 && $frac > 0.8 && $frac < 1.2 && $hashref->{$te}->{"start"} < 50 && $hashref->{$te}->{"left"} < 50;
+	my $pass = $total_length / $F[3] > 0.7 && $frac > 0.8 && $frac < 1.2 && $repstart < 50 && $repleft < 50;
 	return $pass;
 }
 
