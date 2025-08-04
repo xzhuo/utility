@@ -34,7 +34,7 @@ sub process_rmsk {
 sub filter_ltr {
 
 =begin
-Return pass the filter or not, and the provirus type. 
+Return pass the filter or not, and the provirus type, LTR_start<50 and LTR_left<50, INT_start<100 and INT_left<100. 
 > 80% of SV is LTR;
 > 80% to 120% of LTR is in the SV (soloLTR);
 > 80% to 120% of LTR and 80% to 120% of int is in the SV (ERV-LTR);
@@ -52,9 +52,14 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 		if ($hashref->{$te}->{"class"} eq $F[8]){
 			$total_length += $hashref->{$te}->{"sv_length"};
 			if ($te =~ /-int$/) {
-				$int_frac += $hashref->{$te}->{"frac"}
+				$int_frac += $hashref->{$te}->{"frac"};
+				$int_start = $hashref->{$te}->{"start"};
+				$int_left = $hashref->{$te}->{"left"};
 			}
 			else {$ltr_frac += $hashref->{$te}->{"frac"}};
+				$ltr_start = $hashref->{$te}->{"start"};
+				$ltr_left = $hashref->{$te}->{"left"};
+
 		}
 	}
 	my $pass = 0;
@@ -63,20 +68,20 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 	if ($F[4] =~ /-int$/) {
 		if ($ltr_frac > 0.8 && $ltr_frac < 1.2 && $int_frac > 0.8 && $int_frac < 1.2) {
 			$provirus .= "-LTR";
-			$pass = $total_length / $F[3] > 0.8;
+			$pass = $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50 && $int_start < 100 && $int_left < 100;
 		} elsif ($ltr_frac > 1.6 && $ltr_frac < 2.4 && $int_frac > 0.8 && $int_frac < 1.2) {
 			$provirus = "LTR-$provirus-LTR";
-			$pass = $total_length / $F[3] > 0.8;
+			$pass = $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50 && $int_start < 100 && $int_left < 100;
 		}
 	} elsif ($ltr_frac > 0.8 && $ltr_frac < 1.2) {
-			$pass = $total_length / $F[3] > 0.8;
+			$pass = $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50;
 	}
 
 	return ($pass, $provirus);
 }
 
 
-sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV.
+sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV, repstart<50 and replleft<50.
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
 	my $total_length; # total length of TEs matching column 5.
@@ -87,7 +92,7 @@ sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV.
 			$frac += $hashref->{$te}->{"frac"};
 		}
 	}
-	my $pass = $total_length / $F[3] > 0.7 && $frac > 0.8 && $frac < 1.2;
+	my $pass = $total_length / $F[3] > 0.7 && $frac > 0.8 && $frac < 1.2 && $hashref->{$te}->{"start"} < 50 && $hashref->{$te}->{"left"} < 50;
 	return $pass;
 }
 
