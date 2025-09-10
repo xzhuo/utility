@@ -100,7 +100,8 @@ sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV, repst
 			$repleft = $hashref->{$te}->{"left"};
 		}
 	}
-	my $pass = $total_length / $F[3] > 0.7 && $frac > 0.8 && $frac < 1.2 && $repstart < 50 && $repleft < 50;
+	# my $pass = $total_length / $F[3] > 0.7 && $frac > 0.8 && $frac < 1.2 && $repstart < 50 && $repleft < 50;
+	my $pass = $F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50;
 	return $pass;
 }
 
@@ -116,7 +117,8 @@ sub filter_l1 { # >70% of SV is L1, and 3'end is intact (repleft < 50).
 			$repleft = (defined $repleft && $repleft < $hashref->{$te}->{"left"}) ? $repleft : $hashref->{$te}->{"left"};
 		}
 	}
-	my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
+	# my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
+	my $pass = $F[10] eq "No_Flags" && $repleft < 50;
 	return $pass;
 }
 
@@ -133,7 +135,8 @@ sub filter_sva { # >70% of SV is SVA, and 3'end is intact (repleft < 50). The up
 			$repleft = (defined $repleft && $repleft < $hashref->{$te}->{"left"}) ? $repleft : $hashref->{$te}->{"left"};
 		}
 	}
-	my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
+	# my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
+	my $pass = $F[10] eq "No_Flags" && $repleft < 50;
 	return $pass;
 }
 
