@@ -65,14 +65,20 @@ def main():
     fq_ary_1 = fq_array(fastq_1)
     fq_ary_2 = fq_array(fastq_2)
     if args.threads == 1:
-        filtered_fq_1, filtered_fq_2 = run_fq_dustmasker(fq_ary_1[0:0], fq_ary_2[0:0])
+        filtered_fq_1, filtered_fq_2 = run_fq_dustmasker(fq_ary_1, fq_ary_2)
     else:
-        fq_ary_ary_1 = list(map(lambda i:[i], fq_ary_1))
-        fq_ary_ary_2 = list(map(lambda i:[i], fq_ary_2))
+        # fq_ary_ary_1 = list(map(lambda i:[i], fq_ary_1))
+        # fq_ary_ary_2 = list(map(lambda i:[i], fq_ary_2))
+        fq_ary_ary_1 = [fq_ary_1[i:i+100] for i in range(0, len(fq_ary_1), 100)]
+        fq_ary_ary_2 = [fq_ary_2[i:i+100] for i in range(0, len(fq_ary_2), 100)]
         with Pool(args.threads) as pool:
             results = pool.starmap(run_fq_dustmasker, zip(fq_ary_ary_1, fq_ary_ary_2))
             nonempty_results = [(r[0][0],r[1][0]) for r in results if len(r[0]) >0 and len(r[1]) > 0]
-            filtered_fq_1, filtered_fq_2 = zip(*nonempty_results)
+            try:
+                filtered_fq_1, filtered_fq_2 = zip(*nonempty_results)
+            except ValueError:
+                filtered_fq_1 = []
+                filtered_fq_2 = []
 
     with open(f"{args.out}_dust_1.fastq", 'w') as out_fq1:
         for header, seq, qual in filtered_fq_1:
