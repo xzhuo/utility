@@ -66,24 +66,19 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 
 		}
 	}
-	my $pass = 0;
-	my $provirus = $F[4];
+	# my $pass = 0;
 
 	if ($F[4] =~ /-int$/) {
 		if ($ltr_frac > 0.8 && $ltr_frac < 1.2 && $int_frac > 0.8 && $int_frac < 1.2) {
-			$provirus .= "-LTR";
-			$pass = $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50 && $int_start < 100 && $int_left < 100;
+			$F[10] = "ERV-LTR" if $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50 && $int_start < 100 && $int_left < 100;
 		} elsif ($ltr_frac > 1.6 && $ltr_frac < 2.4 && $int_frac > 0.8 && $int_frac < 1.2) {
-			$provirus = "LTR-$provirus-LTR";
-			$pass = $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50 && $int_start < 100 && $int_left < 100;
+			$F[10] =  "LTR-ERV-LTR" if $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50 && $int_start < 100 && $int_left < 100;
 		}
 	} elsif ($ltr_frac > 0.8 && $ltr_frac < 1.2) {
-			$pass = $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50;
+			$F[10] =  "soloLTR" if $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50;
 	}
-
-	return ($pass, $provirus);
+	return @F;
 }
-
 
 sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV, repstart<50 and replleft<50.
 	my @F = @_;
@@ -101,8 +96,13 @@ sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV, repst
 		}
 	}
 	# my $pass = $total_length / $F[3] > 0.7 && $frac > 0.8 && $frac < 1.2 && $repstart < 50 && $repleft < 50;
-	my $pass = $F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50;
-	return $pass;
+	if ($F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50) {
+		$F[10] = "INTACT";
+	}
+	elsif ($F[10] eq "No_Flags" && $repleft < 50) {
+		$F[10] = "INTACT_3end";
+	}
+	return @F;
 }
 
 sub filter_l1 { # >70% of SV is L1, and 3'end is intact (repleft < 50).
@@ -118,8 +118,13 @@ sub filter_l1 { # >70% of SV is L1, and 3'end is intact (repleft < 50).
 		}
 	}
 	# my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
-	my $pass = $F[10] eq "No_Flags" && $repleft < 50;
-	return $pass;
+	if ($F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50) {
+		$F[10] = "INTACT";
+	}
+	elsif ($F[10] eq "No_Flags" && $repleft < 50) {
+		$F[10] = "INTACT_3end";
+	}
+	return @F;
 }
 
 sub filter_sva { # >70% of SV is SVA, and 3'end is intact (repleft < 50). The upper limit is not applied here.
@@ -136,8 +141,13 @@ sub filter_sva { # >70% of SV is SVA, and 3'end is intact (repleft < 50). The up
 		}
 	}
 	# my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
-	my $pass = $F[10] eq "No_Flags" && $repleft < 50;
-	return $pass;
+	if ($F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50) {
+		$F[10] = "INTACT";
+	}
+	elsif ($F[10] eq "No_Flags" && $repleft < 50) {
+		$F[10] = "INTACT_3end";
+	}
+	return @F;
 }
 
 open IN, $ARGV[0];
@@ -149,15 +159,15 @@ while (<IN>) {
 	next if $F[8] eq "";
 	my $pass;
 	if ($F[8] =~ /^LTR/) {
-		($pass, $F[4]) = filter_ltr(@F); # modify F[4] if necessary
-	} elsif ($F[8] eq "LINE/L1") { # this filter is human specific
-		$pass = filter_l1(@F);
-	} elsif ($F[8] eq "SINE/Alu") { # human specific
-		$pass = filter_alu(@F);
-	} elsif ($F[8] eq "Retroposon/SVA") {
-		$pass = filter_sva(@F);
+		@F = filter_ltr(@F); # if passed the filter, modify $F[10] to soloLTR, ERV-LTR, or LTR-ERV-LTR
+	} elsif ($F[8] eq "LINE/L1") { # this filter is human specific. If passed the filter, modify $F[10] to INTACT or INTACT_3end
+		@F = filter_l1(@F);
+	} elsif ($F[8] eq "SINE/Alu") { # human specific. If passed the filter, modify $F[10] to INTACT or INTACT_3end
+		@F = filter_alu(@F);
+	} elsif ($F[8] eq "Retroposon/SVA") { # human specific. If passed the filter, modify $F[10] to INTACT or INTACT_3end
+		@F = filter_sva(@F);
 	}
-	print join("\t", @F)."\n" if $pass;
+	print join("\t", @F)."\n";
 }
 close IN;
 
