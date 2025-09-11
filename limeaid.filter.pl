@@ -60,10 +60,11 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 				$int_start = $hashref->{$te}->{"start"};
 				$int_left = $hashref->{$te}->{"left"};
 			}
-			else {$ltr_frac += $hashref->{$te}->{"frac"}};
+			else {
+				$ltr_frac += $hashref->{$te}->{"frac"};
 				$ltr_start = $hashref->{$te}->{"start"};
 				$ltr_left = $hashref->{$te}->{"left"};
-
+			}
 		}
 	}
 	# my $pass = 0;
@@ -75,7 +76,7 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 			$F[10] =  "LTR-ERV-LTR" if $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50 && $int_start < 100 && $int_left < 100;
 		}
 	} elsif ($ltr_frac > 0.8 && $ltr_frac < 1.2) {
-			$F[10] =  "soloLTR" if $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50;
+		$F[10] =  "soloLTR" if $total_length / $F[3] > 0.8 && $ltr_start < 50 && $ltr_left < 50;
 	}
 	return @F;
 }
