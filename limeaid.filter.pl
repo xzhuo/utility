@@ -80,7 +80,7 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 	return @F;
 }
 
-sub filter_trpt { # >70% of SV is a non-LTR element, and 80% to 120% of it is in the SV, repstart<50 and replleft<50.
+sub filter_tprt { # >70% of SV is a non-LTR element, and 80% to 120% of it is in the SV, repstart<50 and replleft<50.
 	my $distance = pop(@_); # the distance is the last element of @_.
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
