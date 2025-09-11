@@ -80,7 +80,8 @@ Return LTR-ERV or LTR-ERV-LTR if the main TE is an internal element.
 	return @F;
 }
 
-sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV, repstart<50 and replleft<50.
+sub filter_trpt { # >70% of SV is a non-LTR element, and 80% to 120% of it is in the SV, repstart<50 and replleft<50.
+	my $distance = pop(@_); # the distance is the last element of @_.
 	my @F = @_;
 	my $hashref = process_rmsk($F[2]);
 	my $total_length; # total length of TEs matching column 5.
@@ -96,59 +97,59 @@ sub filter_alu { # >70% of SV is Alu, and 80% to 120% of Alu is in the SV, repst
 		}
 	}
 	# my $pass = $total_length / $F[3] > 0.7 && $frac > 0.8 && $frac < 1.2 && $repstart < 50 && $repleft < 50;
-	if ($F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50) {
+	if ($F[10] eq "No_Flags" && $repstart < $distance && $repleft < $distance) {
 		$F[10] = "INTACT";
 	}
-	elsif ($F[10] eq "No_Flags" && $repleft < 50) {
+	elsif ($F[10] eq "No_Flags" && $repleft < $distance) {
 		$F[10] = "INTACT_3end";
 	}
 	return @F;
 }
 
-sub filter_l1 { # >70% of SV is L1, and 3'end is intact (repleft < 50).
-	my @F = @_;
-	my $hashref = process_rmsk($F[2]);
-	my $total_length; # total length of TEs matching column 5.
-	my $frac;
-	my $repleft;
-	for my $te(keys %$hashref){
-		if ($te eq $F[4]){
-			$total_length += $hashref->{$te}->{"sv_length"};
-			$repleft = (defined $repleft && $repleft < $hashref->{$te}->{"left"}) ? $repleft : $hashref->{$te}->{"left"};
-		}
-	}
-	# my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
-	if ($F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50) {
-		$F[10] = "INTACT";
-	}
-	elsif ($F[10] eq "No_Flags" && $repleft < 50) {
-		$F[10] = "INTACT_3end";
-	}
-	return @F;
-}
+# sub filter_l1 { # >70% of SV is L1, and 3'end is intact (repleft < 50).
+# 	my @F = @_;
+# 	my $hashref = process_rmsk($F[2]);
+# 	my $total_length; # total length of TEs matching column 5.
+# 	my $frac;
+# 	my $repleft;
+# 	for my $te(keys %$hashref){
+# 		if ($te eq $F[4]){
+# 			$total_length += $hashref->{$te}->{"sv_length"};
+# 			$repleft = (defined $repleft && $repleft < $hashref->{$te}->{"left"}) ? $repleft : $hashref->{$te}->{"left"};
+# 		}
+# 	}
+# 	# my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
+# 	if ($F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50) {
+# 		$F[10] = "INTACT";
+# 	}
+# 	elsif ($F[10] eq "No_Flags" && $repleft < 50) {
+# 		$F[10] = "INTACT_3end";
+# 	}
+# 	return @F;
+# }
 
-sub filter_sva { # >70% of SV is SVA, and 3'end is intact (repleft < 50). The upper limit is not applied here.
-	my @F = @_;
-	my $hashref = process_rmsk($F[2]);
-	my $total_length; # total length of TEs matching column 9.
-	my $frac;
-	my $repleft;
-	for my $te(keys %$hashref){
-		if ($hashref->{$te}->{"class"} eq $F[8]){
-			$total_length += $hashref->{$te}->{"sv_length"};
-			# $repleft += $hashref->{$te}->{"left"};
-			$repleft = (defined $repleft && $repleft < $hashref->{$te}->{"left"}) ? $repleft : $hashref->{$te}->{"left"};
-		}
-	}
-	# my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
-	if ($F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50) {
-		$F[10] = "INTACT";
-	}
-	elsif ($F[10] eq "No_Flags" && $repleft < 50) {
-		$F[10] = "INTACT_3end";
-	}
-	return @F;
-}
+# sub filter_sva { # >70% of SV is SVA, and 3'end is intact (repleft < 50). The upper limit is not applied here.
+# 	my @F = @_;
+# 	my $hashref = process_rmsk($F[2]);
+# 	my $total_length; # total length of TEs matching column 9.
+# 	my $frac;
+# 	my $repleft;
+# 	for my $te(keys %$hashref){
+# 		if ($hashref->{$te}->{"class"} eq $F[8]){
+# 			$total_length += $hashref->{$te}->{"sv_length"};
+# 			# $repleft += $hashref->{$te}->{"left"};
+# 			$repleft = (defined $repleft && $repleft < $hashref->{$te}->{"left"}) ? $repleft : $hashref->{$te}->{"left"};
+# 		}
+# 	}
+# 	# my $pass = $total_length / $F[3] > 0.7 && $repleft < 50;
+# 	if ($F[10] eq "No_Flags" && $repstart < 50 && $repleft < 50) {
+# 		$F[10] = "INTACT";
+# 	}
+# 	elsif ($F[10] eq "No_Flags" && $repleft < 50) {
+# 		$F[10] = "INTACT_3end";
+# 	}
+# 	return @F;
+# }
 
 open IN, $ARGV[0];
 
@@ -161,11 +162,11 @@ while (<IN>) {
 	if ($F[8] =~ /^LTR/) {
 		@F = filter_ltr(@F); # if passed the filter, modify $F[10] to soloLTR, ERV-LTR, or LTR-ERV-LTR
 	} elsif ($F[8] eq "LINE/L1") { # this filter is human specific. If passed the filter, modify $F[10] to INTACT or INTACT_3end
-		@F = filter_l1(@F);
+		@F = filter_tprt(@F, 50);
 	} elsif ($F[8] eq "SINE/Alu") { # human specific. If passed the filter, modify $F[10] to INTACT or INTACT_3end
-		@F = filter_alu(@F);
+		@F = filter_tprt(@F, 50);
 	} elsif ($F[8] eq "Retroposon/SVA") { # human specific. If passed the filter, modify $F[10] to INTACT or INTACT_3end
-		@F = filter_sva(@F);
+		@F = filter_tprt(@F, 50);
 	}
 	print join("\t", @F)."\n";
 }
