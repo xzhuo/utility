@@ -73,7 +73,7 @@ def main():
         fq_ary_ary_2 = [fq_ary_2[i:i+100] for i in range(0, len(fq_ary_2), 100)]
         with Pool(args.threads) as pool:
             results = pool.starmap(run_fq_dustmasker, zip(fq_ary_ary_1, fq_ary_ary_2))
-            nonempty_results = [(r[0][0],r[1][0]) for r in results if len(r[0]) >0 and len(r[1]) > 0]
+            nonempty_results = [(r[0][i],r[1][i]) for r in results if len(r[0]) >0 and len(r[1]) > 0 for i in range(len(r[0]))]
             try:
                 filtered_fq_1, filtered_fq_2 = zip(*nonempty_results)
             except ValueError:
