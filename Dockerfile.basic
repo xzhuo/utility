@@ -1,0 +1,5 @@
+FROM condaforge/miniforge3
+
+RUN apt-get update && apt-get install build-essential git libz-dev -y
+
+# RUN conda install -c conda-forge gxx_linux-64 cmake make git
