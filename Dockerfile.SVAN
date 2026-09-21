@@ -3,7 +3,7 @@ RUN conda config --add channels bioconda \
     && conda config --add channels conda-forge \
     && mamba install -y wget git minimap2 bwa cigar trf
 
-RUN pip install pysam Biopython pandas scipy numpy
+RUN pip install pysam Biopython pandas scipy numpy scikit-learn
 
 RUN git clone https://github.com/REPBIO-LAB/SVAN
 
