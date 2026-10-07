@@ -2,4 +2,4 @@ FROM condaforge/miniforge3
 
 RUN conda config --add channels bioconda \
     && conda config --add channels conda-forge \
-    && mamba install -y wget htslib samtools bedtools minimap2 pbccs pbmm2 pbtk pbjasmine hiphase pbsv pb-cpg-tools
+    && mamba install -y wget htslib samtools bedtools minimap2 pbccs pbmm2 pbtk pbjasmine hiphase pbsv methbat pb-cpg-tools
