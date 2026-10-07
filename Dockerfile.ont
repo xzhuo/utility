@@ -6,15 +6,15 @@ RUN conda config --add channels bioconda \
 
 RUN pip install pod5
 
-RUN wget https://cdn.oxfordnanoportal.com/software/analysis/dorado-0.8.1-linux-x64.tar.gz
-RUN mkdir -p dorado && tar -xzf dorado-0.8.1-linux-x64.tar.gz -C dorado/ --strip-components=1
-RUN rm dorado-0.8.1-linux-x64.tar.gz
+RUN wget https://cdn.oxfordnanoportal.com/software/analysis/dorado-2.1.1-linux-x64.tar.gz
+RUN mkdir -p dorado && tar -xzf dorado-2.1.1-linux-x64.tar.gz -C dorado/ --strip-components=1
+RUN rm dorado-2.1.1-linux-x64.tar.gz
 
-RUN wget https://github.com/nanoporetech/modkit/releases/download/v0.4.1/modkit_v0.4.1_u16_x86_64.tar.gz
-RUN mkdir -p modkit && tar -xzf modkit_v0.4.1_u16_x86_64.tar.gz -C modkit/ --strip-components=1
-RUN rm modkit_v0.4.1_u16_x86_64.tar.gz
+RUN wget https://github.com/nanoporetech/modkit/releases/download/v0.6.4/modkit_v0.6.4_u16_x86_64.tar.gz
+RUN mkdir -p modkit && tar -xzf modkit_v0.6.4_u16_x86_64.tar.gz -C modkit/ --strip-components=1
+RUN rm modkit_v0.6.4_u16_x86_64.tar.gz
 
 ENV PATH="$PATH:/modkit:/dorado/bin"
 
 # ONT base calling and methylation processing tools.
-# Tools installed: samtools=1.21, bedtools=2.31.1, pod5=0.3.15, dorado=0.8.1, modkit=0.4.1
+# Tools installed: samtools=1.24, bedtools=2.31.1, pod5=0.3.48, dorado=2.1.1, modkit=0.6.4
