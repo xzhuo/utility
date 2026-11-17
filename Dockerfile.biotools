@@ -6,4 +6,4 @@ RUN conda config --add channels bioconda \
     && mamba install -y make htslib samtools bcftools bedtools bamtools minimap2 last \
     rustybam
 
-RUN pip install modbedtools
+RUN pip install biopython modbedtools
