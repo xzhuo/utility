@@ -1,0 +1,6 @@
+# FROM conda/miniconda3
+FROM condaforge/miniforge3
+
+RUN conda config --add channels bioconda \
+    # && conda config --add channels conda-forge \
+    && mamba install -y bioconda::graphaligner
