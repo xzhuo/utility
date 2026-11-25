@@ -1,5 +1,0 @@
-FROM condaforge/miniforge3
-
-RUN conda config --add channels bioconda \
-    # && conda config --add channels conda-forge \
-    && mamba install bioconda::comparative-annotation-toolkit
